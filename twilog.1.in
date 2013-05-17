@@ -1,0 +1,92 @@
+.\"  -*- nroff -*-
+.\" 
+.\" twilio-utils - Command line utilities for Twilio users
+.\" 
+.\" Copyright 2013 Archie L. Cobbs <archie@dellroad.org>
+.\" 
+.\" Licensed under the Apache License, Version 2.0 (the "License"); you may
+.\" not use this file except in compliance with the License. You may obtain
+.\" a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+.\" 
+.\" Unless required by applicable law or agreed to in writing, software
+.\" distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+.\" WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+.\" License for the specific language governing permissions and limitations
+.\" under the License.
+.\"
+.\" $Id$
+.\"
+.Dd May 17, 2013
+.Dt TWILOG 1
+.Os
+.Sh NAME
+.Nm twilog
+.Nd Download Twilio notifications and log them to syslog
+.Sh SYNOPSIS
+.Nm twilog
+.Bk -words
+.Op Fl d
+.Op Fl c Ar config
+.Op Fl f Ar facility
+.Op Fl t Ar tag
+.Op Fl s Ar statefile
+.Ek
+.Sh DESCRIPTION
+.Nm
+downloads Twilio notifications using the Twilio REST API and logs them to syslog.
+.Pp
+.Nm
+keeps track of notifications already downloaded between invocations, so that
+only new notifications will be logged.
+.Pp
+Normally
+.Nm
+would be invoked from a
+.Xr cron 8
+script.
+.Sh OPTIONS
+.Bl -tag -width Ds
+.It Fl c
+Specify the configuration file.
+.Pp
+This file is simply a shell script that when sourced must define the
+.Pa ACCOUNT_SID
+and
+.Pa AUTH_TOKEN
+shell variables containing the corresponding Twilio credentials.
+.Pp
+If not specified,
+.Pa @defaultconf@
+is assumed.
+.It Fl d
+Run in debug mode: instead of logging notifications to syslog,
+print them to standard output.
+.It Fl f
+Specify the syslog facility.
+The default is
+.Pa user .
+.It Fl t
+Specify the syslog tag.
+The default is
+.Pa twilog .
+.It Fl s
+Specify the state file used to maintain state between invocations.
+The default is
+.Pa "/var/lib/twilog/state.${ACCOUNT_SID}" .
+.El
+.Sh EXIT STATUS
+.Nm
+exits zero normally, or 1 if an error occurs.
+.Pp
+Errors returned from the Twilio REST API are reported to standard error.
+.Sh BUGS
+If more than 1000 notifications have been created since the last time
+.Nm
+was run, only the most recent 1000 will be logged.
+.Sh SEE ALSO
+.Xr cron 8 ,
+.Xr logger 1 ,
+.Xr sendsms 1 ,
+.Xr smslen 1 .
+.Sh AUTHOR
+.An Archie L. Cobbs Aq archie@dellroad.org

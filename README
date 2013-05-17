@@ -1,0 +1,16 @@
+The twilio-utils project contains a few UNIX command-line utilities
+that are handy when working with Twilio.
+
+    sendsms - Send an outbound SMS message via Twilio
+    smslen - Calculate SMS payload length
+    twilog - Download Twilio notifications into syslog 
+
+See INSTALL for installation instructions.
+
+See COPYING for license.
+
+See CHANGES for change history.
+
+Enjoy!
+
+$Id$

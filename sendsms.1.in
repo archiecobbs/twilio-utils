@@ -1,0 +1,88 @@
+.\"  -*- nroff -*-
+.\" 
+.\" twilio-utils - Command line utilities for Twilio users
+.\" 
+.\" Copyright 2013 Archie L. Cobbs <archie@dellroad.org>
+.\" 
+.\" Licensed under the Apache License, Version 2.0 (the "License"); you may
+.\" not use this file except in compliance with the License. You may obtain
+.\" a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+.\" 
+.\" Unless required by applicable law or agreed to in writing, software
+.\" distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+.\" WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+.\" License for the specific language governing permissions and limitations
+.\" under the License.
+.\"
+.\" $Id$
+.\"
+.Dd May 17, 2013
+.Dt SENDSMS 1
+.Os
+.Sh NAME
+.Nm sendsms
+.Nd Send outgoing SMS message via the Twilio REST API
+.Sh SYNOPSIS
+.Nm sendsms
+.Bk -words
+.Op Fl e Ar encoding
+.Op Fl c Ar config
+.Op Fl F Ar number
+.Op Fl f Ar file
+.Op number
+.Ek
+.Sh DESCRIPTION
+.Nm
+attempts to transmit a single outoing SMS message using the Twilio REST API
+to the specified
+.Ar number .
+The message content is read from standard input, or the specified
+.Ar file
+if the
+.Fl f
+flag is used.
+.Pp
+The input is automatically truncated at the point at which it would exceed the 140 byte SMS payload limit.
+See
+.Xr smslen 1
+for information on calculating this limit.
+.Sh OPTIONS
+.Bl -tag -width Ds
+.It Fl e
+Specify input character encoding.
+The default is UTF-8.
+.It Fl c
+Specify the configuration file.
+.Pp
+This file is simply a shell script that when sourced must define the
+.Pa ACCOUNT_SID
+and
+.Pa AUTH_TOKEN
+shell variables containing the corresponding Twilio credentials.
+.Pp
+This file must also define
+.Pa FROM_NUMBER
+shell variable unless the
+.Fl F
+flag is used to specify the sending SMS phone number.
+.Pp
+If not specified,
+.Pa @defaultconf@
+is assumed.
+.It Fl F
+Specify the sending SMS phone number.
+This flag is required if the configuration file does not define
+.Pa FROM_NUMBER .
+.It Fl f
+Read the message content from the specified file instead of standard input.
+.El
+.Sh EXIT STATUS
+.Nm
+exits zero normally, or 1 if an error occurs.
+.Pp
+Errors returned from the Twilio REST API are reported to standard error.
+.Sh SEE ALSO
+.Xr smslen 1 ,
+.Xr twilog 1 .
+.Sh AUTHOR
+.An Archie L. Cobbs Aq archie@dellroad.org

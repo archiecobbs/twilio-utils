@@ -1,0 +1,105 @@
+.\"  -*- nroff -*-
+.\" 
+.\" twilio-utils - Command line utilities for Twilio users
+.\" 
+.\" Copyright 2013 Archie L. Cobbs <archie@dellroad.org>
+.\" 
+.\" Licensed under the Apache License, Version 2.0 (the "License"); you may
+.\" not use this file except in compliance with the License. You may obtain
+.\" a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+.\" 
+.\" Unless required by applicable law or agreed to in writing, software
+.\" distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+.\" WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+.\" License for the specific language governing permissions and limitations
+.\" under the License.
+.\"
+.\" $Id$
+.\"
+.Dd May 17, 2013
+.Dt SMSLEN 1
+.Os
+.Sh NAME
+.Nm smslen
+.Nd Calculate SMS message payload length
+.Sh SYNOPSIS
+.Nm smslen
+.Bk -words
+.Op Fl i Ar encoding
+.Op Ar filename
+.Ek
+.Pp
+.Nm smslen
+.Bk -words
+.Fl r Ar limit
+.Op Fl i Ar encoding
+.Op Ar filename
+.Ek
+.Pp
+.Nm smslen
+.Bk -words
+.Fl t Ar limit
+.Op Fl i Ar encoding
+.Op Ar filename
+.Ek
+.Sh DESCRIPTION
+.Nm
+calculates how many bytes of SMS payload are required for the given input text.
+.Pp
+The algorithm first attempts to encode the input using GSM 03.38, which requires
+seven or 14 bits per character (depending on whether the character is an ``extension'' character).
+However only certain commonly-used characters are encodable in GSM 03.38,
+so if any unsupported characters are seen, the algorithm reverts to UTF-16 encoding
+for the entire message, thus requiring 16 bits per character.
+.Pp
+The first form prints the number of bytes required to encode the input.
+.Pp
+The
+.Fl r
+form inverts the calcaulation, printing the number of input bytes that
+will fit under the given encoded length
+.Ar limit .
+The SMS payload limit is 140 bytes, so for example
+.Fl r Ar 140
+will calculate how much of the input text can fit in a single SMS message.
+.Pp
+The
+.Fl t
+form performs the same calculation as the
+.Fl r
+form but copies the input to the output, truncating it when the calculated
+.Ar limit
+number of encoded output bytes is reached.
+.Sh OPTIONS
+.Bl -tag -width Ds
+.It Fl i
+Specify input character encoding.
+By default, UTF-8 is assumed.
+.It Fl r Ar limit
+Output the number of input bytes that, when encoded in an SMS payload,
+will have a length at most
+.Ar limit .
+.It Fl t Ar limit
+Copy the input to the output up until the encoded length would reach
+.Ar limit .
+.It Fl h
+Output usage message and exit.
+.El
+.Sh EXIT STATUS
+.Nm
+exits zero normally, or 1 if an error occurs.
+.Pp
+Possible errors include an invalid byte sequence in the input.
+.Sh SEE ALSO
+.Xr sendsms 1 ,
+.Xr twilog 1 .
+.Rs
+.%T "Adventures in Unicode SMS"
+.%O http://www.twilio.com/engineering/2012/11/08/adventures-in-unicode-sms
+.Re
+.Rs
+.%T "Wikipedia: GSM 03.38"
+.%O http://en.wikipedia.org/wiki/GSM_03.38
+.Re
+.Sh AUTHOR
+.An Archie L. Cobbs Aq archie@dellroad.org

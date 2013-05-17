@@ -1,0 +1,238 @@
+#!/bin/bash
+# $Id$
+
+# Constants
+BASE_URL='https://api.twilio.com/'
+NOTIFICATIONS_PATH='/2010-04-01/Accounts/${ACCOUNT_SID}/Notifications?MessageDate\>=${START_DATE}\&PageSize=${PAGESIZE}'
+FACILITY_REGEX="^(auth|authpriv|cron|daemon|ftp|kern|lpr|mail|news|security|user|uucp|local[0-7])$"
+DEFAULT_FACILITY="user"
+DEFAULT_TAG="twilog"
+DEFAULT_STATEFILE='/var/lib/twilog/state.${ACCOUNT_SID}'
+DEFAULT_CREDSFILE='@defaultconf@'
+PAGESIZE="1000"
+XMLSTARLET="@XMLSTARLET@"
+LOGGER="@LOGGER@"
+
+# Usage message
+usage()
+{
+    echo "Usage: twilog [-d] [-c config] [-f facility] [-t tag] [-s statefile]" 1>&2
+    echo "Options:" 1>&2
+    echo "    -c    Specify credentials file (default \"${DEFAULT_CREDSFILE}\")" 1>&2
+    echo "    -d    Debug mode: log to stdout instead of syslog" 1>&2
+    echo "    -f    Specify syslog facility (default \"${DEFAULT_FACILITY}\")" 1>&2
+    echo "    -s    Specify state file (default \"${DEFAULT_STATEFILE}\")" 1>&2
+    echo "    -t    Specify syslog tag (default \"${DEFAULT_TAG}\")" 1>&2
+}
+
+# Log something
+logit()
+{
+    LEVEL="${1}"
+    if [ "${DEBUG}" = 'true' ]; then
+        cat
+    else
+        "${LOGGER}" -p "${FACILITY}.${LEVEL}" -t "${TAG}"
+    fi
+}
+
+# Parse flags passed in on the command line
+DEBUG="false"
+DEBUG_RESULT=""
+STATEFILE="${DEFAULT_STATEFILE}"
+CREDSFILE="${DEFAULT_CREDSFILE}"
+FACILITY="${DEFAULT_FACILITY}"
+TAG="${DEFAULT_TAG}"
+while [ ${#} -gt 0 ]; do
+    case "$1" in
+        -c)
+            shift
+            CREDSFILE="${1}"
+            shift
+            ;;
+        -D)
+            shift
+            DEBUG_RESULT="${1}"
+            shift
+            ;;
+        -d)
+            shift
+            DEBUG="true"
+            ;;
+        -f)
+            shift
+            FACILITY="${1}"
+            if ! echo "${FACILITY}" | grep -qE "${FACILITY_REGEX}"; then
+                echo "${NAME}: invalid facility \`${FACILITY}'" 1>&2
+                exit 1
+            fi
+            shift
+            ;;
+        -s)
+            shift
+            STATEFILE="${1}"
+            shift
+            ;;
+        -t)
+            shift
+            TAG="${1}"
+            shift
+            ;;
+        -h|--help)
+            usage
+            exit
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+case "${#}" in
+    0)
+        ;;
+    *)
+        usage
+        exit 1
+        ;;
+esac
+
+# See if credentials file is readable
+if ! test -r "${CREDSFILE}"; then
+    echo "twilog: can't read ${CREDSFILE}" 1>&2
+    exit 1
+fi
+
+# Parse credentials file
+. "${CREDSFILE}"
+if [ -z "${ACCOUNT_SID}" ]; then
+    echo "twilog: ACCOUNT_SID missing in ${CREDSFILE}" 1>&2
+    exit 1
+fi
+if [ -z "${AUTH_TOKEN}" ]; then
+    echo "twilog: AUTH_TOKEN missing in ${CREDSFILE}" 1>&2
+    exit 1
+fi
+
+# Create temporary files for response
+RESPONSE_FILE=`mktemp -q /tmp/twilog.XXXXXX`
+if [ $? -ne 0 ]; then
+    echo "twilog: can't create temporary file" 1>&2
+    exit 1
+fi
+trap "rm -f ${RESPONSE_FILE}" 0 2 3 5 10 13 15
+
+# Sanity check stuff
+if ! [[ "${ACCOUNT_SID}" =~ AC[0-9a-f]{32} ]]; then
+    echo "twilog: invalid account SID \`${ACCOUNT_SID}'" 1>&2
+    exit 1
+fi
+if ! [[ "${AUTH_TOKEN}" =~ [0-9a-f]{32} ]]; then
+    echo "twilog: invalid authentication token" 1>&2
+    exit 1
+fi
+
+# Read state file
+if [ "${STATEFILE}" = "${DEFAULT_STATEFILE}" ]; then
+    STATEFILE="`eval echo ${STATEFILE}`"
+fi
+if [ -r "${STATEFILE}" ]; then
+    . "${STATEFILE}"
+fi
+if [ -z "${START_DATE}" ]; then
+    START_DATE="2008-01-01"
+fi
+
+# Build URL
+URL="`echo ${BASE_URL} | sed 's|/$||g'`""`eval echo ${NOTIFICATIONS_PATH}`"
+
+# Post request
+if [ -n "${DEBUG_RESULT}" ]; then
+    cat "${DEBUG_RESULT}" > "${RESPONSE_FILE}"
+else
+    curl --silent \
+      --user "${ACCOUNT_SID}:${AUTH_TOKEN}" \
+      --output "${RESPONSE_FILE}" \
+      "${URL}"
+fi
+
+# Check result
+CURL_RESULT="$?"
+if [ "${CURL_RESULT}" -ne 0 ]; then
+    echo "twilog: error sending request (curl returned ${CURL_RESULT})" 1>&2
+    exit 1
+fi
+
+# Check for REST error XML response
+ERROR_CODE=`"${XMLSTARLET}" sel -T -t -m /TwilioResponse/RestException -v Code -nl ${RESPONSE_FILE} 2>/dev/null`
+ERROR_MESSAGE=`"${XMLSTARLET}" sel -T -t -m /TwilioResponse/RestException -v Message -nl ${RESPONSE_FILE} 2>/dev/null`
+if [ -n "${ERROR_CODE}" -o -n "${ERROR_MESSAGE}" ]; then
+    echo "twilog: Twilio REST error #${ERROR_CODE}: ${ERROR_MESSAGE}" 1>&2
+    exit 1
+fi
+
+# Extract SID of the most recent message (if any)
+NEW_LAST_SID=`"${XMLSTARLET}" sel -T -t -m '/TwilioResponse/Notifications/Notification[1]' -v Sid -nl ${RESPONSE_FILE}`
+if [ -z "${NEW_LAST_SID}" ]; then
+    exit 0;
+fi
+if ! [[ "${NEW_LAST_SID}" =~ NO[0-9a-f]{32} ]]; then
+    echo "twilog: error parsing result" 1>&2
+    exit 1
+fi
+
+# Get the XPath expression that will match all notifications newer than ${LAST_SID}
+if [ -z "${LAST_SID}" ]; then
+    NEWER_XPATH="/TwilioResponse/Notifications/Notification"
+else
+    FOUND_LAST_SID=`"${XMLSTARLET}" sel -T -t -m "/TwilioResponse/Notifications/Notification[Sid='${LAST_SID}']" -v Sid -nl ${RESPONSE_FILE}`
+    if [ -z "${FOUND_LAST_SID}" ]; then
+        echo "some notifications after "${LAST_SID}" may have been missed; consider more frequent checks and/or a larger \`-n' value" | logit WARNING
+        NEWER_XPATH="/TwilioResponse/Notifications/Notification"
+    else
+        NEWER_XPATH="/TwilioResponse/Notifications/Notification[following-sibling::Notification[Sid='${LAST_SID}']]"
+    fi
+fi
+
+# Process SIDs of newer messages (in reverse order)
+"${XMLSTARLET}" sel -T -t -m "${NEWER_XPATH}" -v Sid -nl ${RESPONSE_FILE} | tac | while read SID; do
+
+    # Get level: error, warning, or info
+    LEVEL=`"${XMLSTARLET}" sel -T -t -m "/TwilioResponse/Notifications/Notification[Sid='${SID}']" -v Log -nl ${RESPONSE_FILE}`
+    case "${LEVEL}" in
+        0)
+            LEVEL="ERROR"
+            ;;
+        1)
+            LEVEL="WARNING"
+            ;;
+        *)
+            LEVEL="INFO"
+            ;;
+    esac
+
+    # Get message body
+    MESSAGE=`"${XMLSTARLET}" sel -T -t -m "/TwilioResponse/Notifications/Notification[Sid='${SID}']" -v MessageText -nl ${RESPONSE_FILE} | uniq`
+
+    # Check for URL-encoded message; if found, decode it
+    if [[ "${MESSAGE}" =~ ^(([[:alnum:]_.~+-]|%[[:xdigit:]]{2})+=([[:alnum:]_.~+-]|%[[:xdigit:]]{2})*)(&(([[:alnum:]_.~+-]|%[[:xdigit:]]{2})+=([[:alnum:]_.~+-]|%[[:xdigit:]]{2})*))*$ ]]; then
+        MESSAGE=`echo "${MESSAGE}" | tr '&' ' ' | php -r 'while ($x=fgets(STDIN)) echo urldecode(trim($x));'`
+    fi
+
+    # Log message
+    echo "${SID}: ${LEVEL}: ${MESSAGE}" | sed -r 's/^[[:space:]]+$//g' | uniq | logit "${LEVEL}"
+done
+
+# Update state file
+printf 'START_DATE='\''%s'\''\nLAST_SID='\''%s'\''\n' `date +%Y-%m-%d` "${NEW_LAST_SID}" > "${STATEFILE}"
+if [ $? -ne 0 ]; then
+    echo "twilog: error updating ${STATEFILE}" 1>&2
+    exit 1
+fi
+
+# Done
+exit 0
+
