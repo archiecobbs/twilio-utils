@@ -14,7 +14,7 @@ for MANPAGE in sendsms smslen twilog; do
     fi
 
     printf '#summary Wikified version of the %s man page\n#labels Featured\n\n{{{\n' "${MANPAGE}" > ManPage-"${MANPAGE}".wiki
-    groff -r LL=100n -r LT=100n -Tlatin1 -man ../trunk/"${MANPAGE}".1 | sed -r -e 's/.\x08(.)/\1/g' -e 's/[[0-9]+m//g' >> ManPage-"${MANPAGE}".wiki
+    groff -r LL=100n -r LT=100n -Tlatin1 -man ../trunk/"${MANPAGE}".1 | sed -r -e 's/.\x08(.)/\1/g' -e 's/[[0-9]+m//g' >> ManPage_"${MANPAGE}".wiki
     echo '}}}' >> ManPage-"${MANPAGE}".wiki
 
 done
