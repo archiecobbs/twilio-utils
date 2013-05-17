@@ -1,0 +1,170 @@
+#!/bin/bash
+# $Id$
+
+# Bail on error
+set -e
+
+# Constants
+DEFAULT_CONFIG_FILE='@defaultconf@'
+MAX_PAYLOAD_BYTES='140'
+BASE_URL='https://api.twilio.com/'
+ACCOUNTS_PATH='/2010-04-01/Accounts/${ACCOUNT_SID}/SMS/Messages'
+RESULT_XSL='@pkgdatadir@/result.xsl'
+CURL="@CURL@"
+XSLTPROC="@XSLTPROC@"
+DEFAULT_ENCODING="UTF-8"
+SMSLEN="@bindir@/smslen"
+
+# Usage message
+usage()
+{
+    echo "Usage: sendsms [-c config.txt] [-e encoding] [-F from-number] [-f file] number" 1>&2
+    echo "Options:" 1>&2
+    echo "    -c    Specify config file (default \"${DEFAULT_CONFIG_FILE}\")" 1>&2
+    echo "    -e    Specify input encoding (default \"${DEFAULT_ENCODING}\")" 1>&2
+    echo "    -f    Read message from file (\`-' means stdin (the default))" 1>&2
+    echo "    -F    Specify sending phone number (10 digits)" 1>&2
+}
+
+# Function to normalize a phone number to the way Twilio likes it
+normalize()
+{
+    echo ${1+"$@"} | sed -r \
+      -e 's/[^0-9]//g' \
+      -e 's/^1?([0-9]{10})$/+1\1/g'
+}
+
+# Parse flags passed in on the command line
+CONFIG_FILE="${DEFAULT_CONFIG_FILE}"
+ENCODING="${DEFAULT_ENCODING}"
+FROM_NUMBER=""
+INPUT_FILE="-"
+while [ ${#} -gt 0 ]; do
+    case "$1" in
+        -c)
+            shift
+            CONFIG_FILE="${1}"
+            shift
+            ;;
+        -e)
+            shift
+            ENCODING="${1}"
+            shift
+            ;;
+        -f)
+            shift
+            INPUT_FILE="${1}"
+            shift
+            ;;
+        -F)
+            shift
+            FROM_NUMBER="${1}"
+            shift
+            ;;
+        -h|--help)
+            usage
+            exit
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+case "${#}" in
+    1)
+        TO_NUMBER="$1"
+        ;;
+    *)
+        usage
+        exit 1
+        ;;
+esac
+
+# See if config file is readable
+if ! test -r "${CONFIG_FILE}"; then
+    echo "sendsms: can't read ${CONFIG_FILE}" 1>&2
+    exit 1
+fi
+
+# Parse config file
+. "${CONFIG_FILE}"
+
+# Normalize numbers
+FROM_NUMBER=`normalize "${FROM_NUMBER}"`
+TO_NUMBER=`normalize "${TO_NUMBER}"`
+
+# Sanity check stuff
+if ! [[ "${FROM_NUMBER}" =~ \+1[2-9][0-9]{2}[2-9][0-9]{2}[0-9]{4} ]]; then
+    echo "sendsms: invalid source phone number \`${FROM_NUMBER}'" 1>&2
+    exit 1
+fi
+if ! [[ "${TO_NUMBER}" =~ \+1[2-9][0-9]{2}[2-9][0-9]{2}[0-9]{4} ]]; then
+    echo "sendsms: invalid destination phone number \`${TO_NUMBER}'" 1>&2
+    exit 1
+fi
+if ! [[ "${ACCOUNT_SID}" =~ AC[0-9a-f]{32} ]]; then
+    echo "sendsms: invalid account SID \`${ACCOUNT_SID}'" 1>&2
+    exit 1
+fi
+if ! [[ "${AUTH_TOKEN}" =~ [0-9a-f]{32} ]]; then
+    echo "sendsms: invalid authentication token" 1>&2
+    exit 1
+fi
+
+# Build URL
+URL="`echo ${BASE_URL} | sed 's|/$||g'`""`eval echo ${ACCOUNTS_PATH}`"
+
+# Create temporary files for message response and error
+RESPONSE_FILE=`mktemp -q /tmp/sendsms.XXXXXX`
+if [ $? -ne 0 ]; then
+    echo "sendsms: can't create temporary file" 1>&2
+    exit 1
+fi
+ERROR_FILE=`mktemp -q /tmp/sendsms.XXXXXX`
+if [ $? -ne 0 ]; then
+    rm -f ${RESPONSE_FILE}
+    echo "sendsms: can't create temporary file" 1>&2
+    exit 1
+fi
+trap "rm -f ${RESPONSE_FILE} ${ERROR_FILE}" 0 2 3 5 10 13 15
+
+# Truncate input to 140 payload bytes and post to Twilio
+cat "${INPUT_FILE}" \
+  | "${SMSLEN}" -i "${ENCODING}" -t "${MAX_PAYLOAD_BYTES}" \
+  | "${CURL}" --silent \
+  --user "${ACCOUNT_SID}:${AUTH_TOKEN}" \
+  --data "From=${FROM_NUMBER}" \
+  --data "To=${TO_NUMBER}" \
+  --data-urlencode "Body@-" \
+  --output "${RESPONSE_FILE}" \
+  "${URL}"
+
+# Check result
+CURL_RESULT="$?"
+if [ "${CURL_RESULT}" -ne 0 ]; then
+    echo "sendsms: error sending request (curl returned ${CURL_RESULT})" 1>&2
+    exit 1
+fi
+
+# Apply XSLT to returned XML to get error message
+"${XSLTPROC}" "${RESULT_XSL}" "${RESPONSE_FILE}" > "${ERROR_FILE}" 2>&1
+if [ $? -ne 0 ]; then
+    echo -n "sendsms: error parsing result:" 1>&2
+    cat "${ERROR_FILE}" 1>&2
+    exit 1
+fi
+
+# Was there an error returned?
+if [ -s "${ERROR_FILE}" ]; then
+    echo -n "sendsms: " 1>&2
+    cat "${ERROR_FILE}" 1>&2
+    exit 1
+fi
+
+# Done
+exit 0
+

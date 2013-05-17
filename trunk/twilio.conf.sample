@@ -1,0 +1,9 @@
+# Sample config file for twilio-utils
+
+# Twilio account credentials
+ACCOUNT_SID="AC00000000000000000000000000000000"
+AUTH_TOKEN="00000000000000000000000000000000"
+
+# Default sending phone number for sendsms(1)
+FROM_NUMBER="+14155555555"
+
