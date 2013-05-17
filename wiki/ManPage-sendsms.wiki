@@ -1,0 +1,51 @@
+#summary Wikified version of the sendsms man page
+#labels Featured
+
+{{{
+SENDSMS(1)                           BSD General Commands Manual                          SENDSMS(1)
+
+NAME
+     sendsms -- Send outgoing SMS message via the Twilio REST API
+
+SYNOPSIS
+     sendsms [-e encoding] [-c config] [-F number] [-f file] [number]
+
+DESCRIPTION
+     sendsms attempts to transmit a single outoing SMS message using the Twilio REST API to the
+     specified number.  The message content is read from standard input, or the specified file if
+     the -f flag is used.
+
+     The input is automatically truncated at the point at which it would exceed the 140 byte SMS
+     payload limit.  See smslen(1) for information on calculating this limit.
+
+OPTIONS
+     -e      Specify input character encoding.  The default is UTF-8.
+
+     -c      Specify the configuration file.
+
+             This file is simply a shell script that when sourced must define the ACCOUNT_SID and
+             AUTH_TOKEN shell variables containing the corresponding Twilio credentials.
+
+             This file must also define FROM_NUMBER shell variable unless the -F flag is used to
+             specify the sending SMS phone number.
+
+             If not specified, /etc/twilio.conf is assumed.
+
+     -F      Specify the sending SMS phone number.  This flag is required if the configuration file
+             does not define FROM_NUMBER.
+
+     -f      Read the message content from the specified file instead of standard input.
+
+EXIT STATUS
+     sendsms exits zero normally, or 1 if an error occurs.
+
+     Errors returned from the Twilio REST API are reported to standard error.
+
+SEE ALSO
+     smslen(1), twilog(1).
+
+AUTHOR
+     Archie L. Cobbs <archie@dellroad.org>
+
+BSD                                         May 17, 2013                                         BSD
+}}}
