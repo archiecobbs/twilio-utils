@@ -15,6 +15,7 @@ XMLSTARLET="@XMLSTARLET@"
 LOGGER="@LOGGER@"
 PHP="@PHP@"
 TAC="@TAC@"
+DATE_PARSING_STYLE="@DATE_PARSING_STYLE@"
 
 # Usage message
 usage()
@@ -37,6 +38,25 @@ logit()
     else
         "${LOGGER}" -p "${FACILITY}.${LEVEL}" -t "${TAG}"
     fi
+}
+
+# Parse a timestamp:
+#   $1 = Twilio date
+#   $2 = Output format string
+parse_date()
+{
+    case "${DATE_PARSING_STYLE}" in
+        Linux)
+            date -d "${1}" "+${2}"
+            ;;
+        BSD)
+            date -j -f '%a, %d %b %Y %T %z' "${1}" "+${2}"
+            ;;
+        *)
+            echo "twilog: unknown date parsing style: ${DATE_PARSING_STYLE}" 1>&2
+            exit 1
+            ;;
+    esac
 }
 
 # Parse flags passed in on the command line
@@ -178,33 +198,37 @@ if [ -n "${ERROR_CODE}" -o -n "${ERROR_MESSAGE}" ]; then
 fi
 
 # Extract SID of the most recent message (if any)
-NEW_LAST_SID=`"${XMLSTARLET}" sel -T -t -m '/TwilioResponse/Notifications/Notification[1]' -v Sid -nl ${RESPONSE_FILE}`
-if [ -z "${NEW_LAST_SID}" ]; then
-    exit 0;
-fi
-if ! [[ "${NEW_LAST_SID}" =~ NO[0-9a-f]{32} ]]; then
-    echo "twilog: error parsing result" 1>&2
+NEW_LAST_SID=`"${XMLSTARLET}" sel -T -t -m '/TwilioResponse/Notifications/Notification[1]' -v Sid -nl ${RESPONSE_FILE} 2>&1`
+if ! [[ "${NEW_LAST_SID}" =~ ^(NO[0-9a-f]{32})?$ ]]; then
+    echo "twilog: error parsing result: ${NEW_LAST_SID}" 1>&2
     exit 1
 fi
 
-# Get the XPath expression that will match all notifications newer than ${LAST_SID}
-if [ -z "${LAST_SID}" ]; then
-    NEWER_XPATH="/TwilioResponse/Notifications/Notification"
-else
+# Get the XPath expression that will match all notifications that have occurred after ${LAST_SID}
+NEWER_XPATH="/TwilioResponse/Notifications/Notification"
+if [ -z "${NEW_LAST_SID}" ]; then
+
+    # If saw a notification on ${START_DATE} last time, but we didn't see any this time,
+    # then assume that the user has deleted them via the REST API and/or our state file is wrong
+    if [ -n "${LAST_SID}" ]; then
+        echo "all notifications after "${START_DATE}" seem to have disappeared; proceeding anyway" | logit WARNING
+        NEW_LAST_SID=""
+    fi
+elif [ -n "${LAST_SID}" ]; then
+
+    # Find the ${LAST_SID} in the returned notification list
     FOUND_LAST_SID=`"${XMLSTARLET}" sel -T -t -m "/TwilioResponse/Notifications/Notification[Sid='${LAST_SID}']" -v Sid -nl ${RESPONSE_FILE}`
-    if [ -z "${FOUND_LAST_SID}" ]; then
-        echo "some notifications after "${LAST_SID}" may have been missed; consider more frequent checks and/or a larger \`-n' value" | logit WARNING
-        NEWER_XPATH="/TwilioResponse/Notifications/Notification"
+    if [ -n "${FOUND_LAST_SID}" ]; then
+        NEWER_XPATH="/TwilioResponse/Notifications/Notification[Sid='${LAST_SID}']/preceding-sibling::Notification"
     else
-        NEWER_XPATH="/TwilioResponse/Notifications/Notification[following-sibling::Notification[Sid='${LAST_SID}']]"
+        echo "some notifications after "${LAST_SID}" may have been missed; consider running more frequently" | logit WARNING
     fi
 fi
 
 # Process SIDs of newer messages (in reverse order)
-"${XMLSTARLET}" sel -T -t -m "${NEWER_XPATH}" -v Sid -nl ${RESPONSE_FILE} | "${TAC}" | while read SID; do
+"${XMLSTARLET}" sel -T -t -m "${NEWER_XPATH}" -v "concat(Sid, ' ', Log, ' ', MessageDate)" -nl ${RESPONSE_FILE} | "${TAC}" | while read SID LEVEL MESSAGE_DATE; do
 
-    # Get level: error, warning, or info
-    LEVEL=`"${XMLSTARLET}" sel -T -t -m "/TwilioResponse/Notifications/Notification[Sid='${SID}']" -v Log -nl ${RESPONSE_FILE}`
+    # Convert level: error, warning, or info
     case "${LEVEL}" in
         0)
             LEVEL="ERROR"
@@ -217,10 +241,10 @@ fi
             ;;
     esac
 
-    # Get message body
+    # Get message body; compress duplicate lines
     MESSAGE=`"${XMLSTARLET}" sel -T -t -m "/TwilioResponse/Notifications/Notification[Sid='${SID}']" -v MessageText -nl ${RESPONSE_FILE} | uniq`
 
-    # Check for URL-encoded message; if found, decode it
+    # Check for an URL-encoded message; if found, decode it
     if [[ "${MESSAGE}" =~ ^(([[:alnum:]_.~+-]|%[[:xdigit:]]{2})+=([[:alnum:]_.~+-]|%[[:xdigit:]]{2})*)(&(([[:alnum:]_.~+-]|%[[:xdigit:]]{2})+=([[:alnum:]_.~+-]|%[[:xdigit:]]{2})*))*$ ]]; then
         MESSAGE=`echo "${MESSAGE}" | tr '&' ' ' | "${PHP}" -r 'while ($x=fgets(STDIN)) echo urldecode(trim($x));'`
     fi
@@ -229,8 +253,16 @@ fi
     echo "${SID}: ${LEVEL}: ${MESSAGE}" | sed -r 's/^[[:space:]]+$//g' | uniq | logit "${LEVEL}"
 done
 
+# Calculate the start date for next time, which is the date of the most recent message we saw (if any)
+NEW_START_DATE=`"${XMLSTARLET}" sel -T -t -m '/TwilioResponse/Notifications/Notification[1]' -v MessageDate -nl ${RESPONSE_FILE} 2>/dev/null`
+if [ -z "${NEW_START_DATE}" ]; then
+    NEW_START_DATE="${START_DATE}"
+else
+    NEW_START_DATE=`parse_date "${NEW_START_DATE}" '%Y-%m-%d'`
+fi
+
 # Update state file
-printf 'START_DATE='\''%s'\''\nLAST_SID='\''%s'\''\n' `date +%Y-%m-%d` "${NEW_LAST_SID}" > "${STATEFILE}"
+printf 'START_DATE='\''%s'\''\nLAST_SID='\''%s'\''\n' "${NEW_START_DATE}" "${NEW_LAST_SID}" > "${STATEFILE}"
 if [ $? -ne 0 ]; then
     echo "twilog: error updating ${STATEFILE}" 1>&2
     exit 1

@@ -65,6 +65,19 @@ AC_PATH_PROG([TAC], [tac])
 [if test -z "${TAC}"; then]
     AC_MSG_ERROR([tac not found]);
 [fi]
+AC_MSG_CHECKING([date parsing style])
+[if [ "`date -u -d 'Wed, 22 May 2013 14:32:48 +0000' '+%Y-%m-%d' 2>/dev/null`" = '2013-05-22' ]; then
+    DATE_PARSING_STYLE="Linux"
+elif [ "`date -u -j -f '%a, %d %b %Y %T %z' 'Wed, 22 May 2013 14:32:48 +0000' '+%Y-%m-%d' 2>/dev/null`" = '2013-05-22' ]; then
+    DATE_PARSING_STYLE="BSD"
+else
+    DATE_PARSING_STYLE="unknown"
+fi]
+AC_MSG_RESULT([${DATE_PARSING_STYLE}])
+[if [ "${DATE_PARSING_STYLE}" = 'unknown' ]; then]
+    AC_MSG_ERROR([cannot figure out how to parse dates using date(1)]);
+[fi]
+AC_SUBST(DATE_PARSING_STYLE)
 
 # Config file default location
 AC_SUBST(defaultconf, [/etc/twilio.conf])
