@@ -126,11 +126,11 @@ fi
 trap "rm -f ${RESPONSE_FILE}" 0 2 3 5 10 13 15
 
 # Sanity check stuff
-if ! [[ "${ACCOUNT_SID}" =~ AC[0-9a-f]{32} ]]; then
+if ! [[ "${ACCOUNT_SID}" =~ ^AC[0-9a-f]{32}$ ]]; then
     echo "twilog: invalid account SID \`${ACCOUNT_SID}'" 1>&2
     exit 1
 fi
-if ! [[ "${AUTH_TOKEN}" =~ [0-9a-f]{32} ]]; then
+if ! [[ "${AUTH_TOKEN}" =~ ^[0-9a-f]{32}$ ]]; then
     echo "twilog: invalid authentication token" 1>&2
     exit 1
 fi
