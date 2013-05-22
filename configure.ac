@@ -57,6 +57,14 @@ AC_PATH_PROG([LOGGER], [logger])
 [if test -z "${LOGGER}"; then]
     AC_MSG_ERROR([logger not found]);
 [fi]
+AC_PATH_PROG([PHP], [php])
+[if test -z "${PHP}"; then]
+    AC_MSG_ERROR([php not found]);
+[fi]
+AC_PATH_PROG([TAC], [tac])
+[if test -z "${TAC}"; then]
+    AC_MSG_ERROR([tac not found]);
+[fi]
 
 # Config file default location
 AC_SUBST(defaultconf, [/etc/twilio.conf])

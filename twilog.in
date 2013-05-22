@@ -7,11 +7,14 @@ NOTIFICATIONS_PATH='/2010-04-01/Accounts/${ACCOUNT_SID}/Notifications?MessageDat
 FACILITY_REGEX="^(auth|authpriv|cron|daemon|ftp|kern|lpr|mail|news|security|user|uucp|local[0-7])$"
 DEFAULT_FACILITY="user"
 DEFAULT_TAG="twilog"
+INITIAL_START_DATE="2000-01-01"
 DEFAULT_STATEFILE='/var/lib/twilog/state.${ACCOUNT_SID}'
 DEFAULT_CREDSFILE='@defaultconf@'
 PAGESIZE="1000"
 XMLSTARLET="@XMLSTARLET@"
 LOGGER="@LOGGER@"
+PHP="@PHP@"
+TAC="@TAC@"
 
 # Usage message
 usage()
@@ -143,7 +146,7 @@ if [ -r "${STATEFILE}" ]; then
     . "${STATEFILE}"
 fi
 if [ -z "${START_DATE}" ]; then
-    START_DATE="2008-01-01"
+    START_DATE="${INITIAL_START_DATE}"
 fi
 
 # Build URL
@@ -198,7 +201,7 @@ else
 fi
 
 # Process SIDs of newer messages (in reverse order)
-"${XMLSTARLET}" sel -T -t -m "${NEWER_XPATH}" -v Sid -nl ${RESPONSE_FILE} | tac | while read SID; do
+"${XMLSTARLET}" sel -T -t -m "${NEWER_XPATH}" -v Sid -nl ${RESPONSE_FILE} | "${TAC}" | while read SID; do
 
     # Get level: error, warning, or info
     LEVEL=`"${XMLSTARLET}" sel -T -t -m "/TwilioResponse/Notifications/Notification[Sid='${SID}']" -v Log -nl ${RESPONSE_FILE}`
@@ -219,7 +222,7 @@ fi
 
     # Check for URL-encoded message; if found, decode it
     if [[ "${MESSAGE}" =~ ^(([[:alnum:]_.~+-]|%[[:xdigit:]]{2})+=([[:alnum:]_.~+-]|%[[:xdigit:]]{2})*)(&(([[:alnum:]_.~+-]|%[[:xdigit:]]{2})+=([[:alnum:]_.~+-]|%[[:xdigit:]]{2})*))*$ ]]; then
-        MESSAGE=`echo "${MESSAGE}" | tr '&' ' ' | php -r 'while ($x=fgets(STDIN)) echo urldecode(trim($x));'`
+        MESSAGE=`echo "${MESSAGE}" | tr '&' ' ' | "${PHP}" -r 'while ($x=fgets(STDIN)) echo urldecode(trim($x));'`
     fi
 
     # Log message
