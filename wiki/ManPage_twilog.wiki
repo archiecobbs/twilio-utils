@@ -8,7 +8,7 @@ NAME
      twilog -- Download Twilio notifications and log them to syslog
 
 SYNOPSIS
-     twilog [-d] [-c config] [-f facility] [-t tag] [-s statefile]
+     twilog [-d] [-i] [-m] [-c config] [-f facility] [-t tag] [-s statefile]
 
 DESCRIPTION
      twilog downloads Twilio notifications using the Twilio REST API and logs them to syslog.
@@ -30,6 +30,10 @@ OPTIONS
              output.
 
      -f      Specify the syslog facility.  The default is user.
+
+     -i      Include the Notification's SID in the message.
+
+     -m      Include the notification's original timestamp in the message.
 
      -t      Specify the syslog tag.  The default is twilog.
 
