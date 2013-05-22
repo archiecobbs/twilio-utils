@@ -98,19 +98,19 @@ FROM_NUMBER=`normalize "${FROM_NUMBER}"`
 TO_NUMBER=`normalize "${TO_NUMBER}"`
 
 # Sanity check stuff
-if ! [[ "${FROM_NUMBER}" =~ \+1[2-9][0-9]{2}[2-9][0-9]{2}[0-9]{4} ]]; then
+if ! [[ "${FROM_NUMBER}" =~ ^\+1[2-9][0-9]{2}[2-9][0-9]{2}[0-9]{4}$ ]]; then
     echo "sendsms: invalid source phone number \`${FROM_NUMBER}'" 1>&2
     exit 1
 fi
-if ! [[ "${TO_NUMBER}" =~ \+1[2-9][0-9]{2}[2-9][0-9]{2}[0-9]{4} ]]; then
+if ! [[ "${TO_NUMBER}" =~ ^\+1[2-9][0-9]{2}[2-9][0-9]{2}[0-9]{4}$ ]]; then
     echo "sendsms: invalid destination phone number \`${TO_NUMBER}'" 1>&2
     exit 1
 fi
-if ! [[ "${ACCOUNT_SID}" =~ AC[0-9a-f]{32} ]]; then
+if ! [[ "${ACCOUNT_SID}" =~ ^AC[0-9a-f]{32}$ ]]; then
     echo "sendsms: invalid account SID \`${ACCOUNT_SID}'" 1>&2
     exit 1
 fi
-if ! [[ "${AUTH_TOKEN}" =~ [0-9a-f]{32} ]]; then
+if ! [[ "${AUTH_TOKEN}" =~ ^[0-9a-f]{32}$ ]]; then
     echo "sendsms: invalid authentication token" 1>&2
     exit 1
 fi
