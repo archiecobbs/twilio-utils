@@ -18,7 +18,7 @@
 # $Id$
 #
 
-AC_INIT([twilio-utils - Command line utilities for Twilio users], [1.0.0], [http://twilio-utils.googlecode.com/], [twilio-utils])
+AC_INIT([twilio-utils - Command line utilities for Twilio users], [1.0.1], [http://twilio-utils.googlecode.com/], [twilio-utils])
 AC_CONFIG_AUX_DIR(scripts)
 AM_INIT_AUTOMAKE
 dnl AM_MAINTAINER_MODE
