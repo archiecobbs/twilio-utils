@@ -42,21 +42,21 @@ AC_DEFINE(_DARWIN_C_SOURCE, 1, MacOS functions)
 AC_PROG_INSTALL
 AC_PROG_CC
 AC_PATH_PROG([XMLSTARLET], [xml])
-if test -z "${XMLSTARLET}"; then
+[if test -z "${XMLSTARLET}"; then]
     AC_MSG_ERROR([xmlstarlet not found]);
-fi
+[fi]
 AC_PATH_PROG([XSLTPROC], [xsltproc])
-if test -z "${XSLTPROC}"; then
+[if test -z "${XSLTPROC}"; then]
     AC_MSG_ERROR([xsltproc not found]);
-fi
+[fi]
 AC_PATH_PROG([CURL], [curl])
-if test -z "${CURL}"; then
+[if test -z "${CURL}"; then]
     AC_MSG_ERROR([curl not found]);
-fi
+[fi]
 AC_PATH_PROG([LOGGER], [logger])
-if test -z "${LOGGER}"; then
+[if test -z "${LOGGER}"; then]
     AC_MSG_ERROR([logger not found]);
-fi
+[fi]
 
 # Config file default location
 AC_SUBST(defaultconf, [/etc/twilio.conf])
