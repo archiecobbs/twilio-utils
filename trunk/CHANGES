@@ -1,6 +1,7 @@
 Version 1.0.1
 
     - Fix incorrect detection of missed notifications
+    - Add `-i' and `-m' flags to include SID, message date
 
 Version 1.0.0 (r4) Released May 17, 2013
 

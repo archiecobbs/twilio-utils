@@ -26,6 +26,8 @@
 .Nm twilog
 .Bk -words
 .Op Fl d
+.Op Fl i
+.Op Fl m
 .Op Fl c Ar config
 .Op Fl f Ar facility
 .Op Fl t Ar tag
@@ -65,6 +67,10 @@ print them to standard output.
 Specify the syslog facility.
 The default is
 .Pa user .
+.It Fl i
+Include the Notification's SID in the message.
+.It Fl m
+Include the notification's original timestamp in the message.
 .It Fl t
 Specify the syslog tag.
 The default is

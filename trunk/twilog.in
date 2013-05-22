@@ -20,11 +20,13 @@ DATE_PARSING_STYLE="@DATE_PARSING_STYLE@"
 # Usage message
 usage()
 {
-    echo "Usage: twilog [-d] [-c config] [-f facility] [-t tag] [-s statefile]" 1>&2
+    echo "Usage: twilog [-d] [-i] [-m] [-c config] [-f facility] [-t tag] [-s statefile]" 1>&2
     echo "Options:" 1>&2
     echo "    -c    Specify credentials file (default \"${DEFAULT_CREDSFILE}\")" 1>&2
     echo "    -d    Debug mode: log to stdout instead of syslog" 1>&2
     echo "    -f    Specify syslog facility (default \"${DEFAULT_FACILITY}\")" 1>&2
+    echo "    -i    Include notification SID in logged messages" 1>&2
+    echo "    -m    Include original message timestamp in logged messages" 1>&2
     echo "    -s    Specify state file (default \"${DEFAULT_STATEFILE}\")" 1>&2
     echo "    -t    Specify syslog tag (default \"${DEFAULT_TAG}\")" 1>&2
 }
@@ -65,6 +67,8 @@ DEBUG_RESULT=""
 STATEFILE="${DEFAULT_STATEFILE}"
 CREDSFILE="${DEFAULT_CREDSFILE}"
 FACILITY="${DEFAULT_FACILITY}"
+INCLUDE_DATE="false"
+INCLUDE_SID="false"
 TAG="${DEFAULT_TAG}"
 while [ ${#} -gt 0 ]; do
     case "$1" in
@@ -90,6 +94,14 @@ while [ ${#} -gt 0 ]; do
                 exit 1
             fi
             shift
+            ;;
+        -i)
+            shift
+            INCLUDE_SID="true"
+            ;;
+        -m)
+            shift
+            INCLUDE_DATE="true"
             ;;
         -s)
             shift
@@ -250,7 +262,17 @@ fi
     fi
 
     # Log message
-    echo "${SID}: ${LEVEL}: ${MESSAGE}" | sed -r 's/^[[:space:]]+$//g' | uniq | logit "${LEVEL}"
+    if [ "${INCLUDE_SID}" = 'true' ]; then
+        SID="${SID}: "
+    else
+        SID=""
+    fi
+    if [ "${INCLUDE_DATE}" = 'true' ]; then
+        MESSAGE_DATE=""`parse_date "${MESSAGE_DATE}" '%Y-%m-%d %T '`
+    else
+        MESSAGE_DATE=""
+    fi
+    echo "${MESSAGE_DATE}${SID}${LEVEL}: ${MESSAGE}" | sed -r 's/^[[:space:]]+$//g' | uniq | logit "${LEVEL}"
 done
 
 # Calculate the start date for next time, which is the date of the most recent message we saw (if any)
