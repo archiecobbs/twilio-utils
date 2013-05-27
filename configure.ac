@@ -53,6 +53,10 @@ AC_PATH_PROG([CURL], [curl])
 [if test -z "${CURL}"; then]
     AC_MSG_ERROR([curl not found]);
 [fi]
+AC_PATH_PROG([ICONV], [iconv])
+[if test -z "${ICONV}"; then]
+    AC_MSG_ERROR([iconv not found]);
+[fi]
 AC_PATH_PROG([LOGGER], [logger])
 [if test -z "${LOGGER}"; then]
     AC_MSG_ERROR([logger not found]);

@@ -51,6 +51,8 @@ for information on calculating this limit.
 .It Fl e
 Specify input character encoding.
 The default is UTF-8.
+.Pp
+Invalid character data is silently discarded.
 .It Fl c
 Specify the configuration file.
 .Pp
@@ -59,19 +61,20 @@ This file is simply a shell script that when sourced must define the
 and
 .Pa AUTH_TOKEN
 shell variables containing the corresponding Twilio credentials.
-.Pp
 This file must also define
 .Pa FROM_NUMBER
-shell variable unless the
+shell variable if the
 .Fl F
-flag is used to specify the sending SMS phone number.
+flag is not used to specify the sending SMS phone number.
 .Pp
-If not specified,
+If the
+.Fl c
+flag is not specified,
 .Pa @defaultconf@
 is assumed.
 .It Fl F
 Specify the sending SMS phone number.
-This flag is required if the configuration file does not define
+This flag is required if the configuration file does not define a default
 .Pa FROM_NUMBER .
 .It Fl f
 Read the message content from the specified file instead of standard input.
