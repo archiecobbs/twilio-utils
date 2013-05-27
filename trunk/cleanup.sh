@@ -15,6 +15,6 @@ find . \( -name Makefile -o -name Makefile.in \) -print0 | xargs -0 rm -f
 rm -f svnrev.c
 rm -f *.o smslen
 rm -f twilio-utils-?.?.?.tar.gz
-rm -f sendsms{,.1}
+rm -f twimsg{,.1}
 rm -f smslen.1
 rm -f twilog{,.1}

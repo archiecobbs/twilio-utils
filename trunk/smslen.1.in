@@ -91,7 +91,7 @@ exits zero normally, or 1 if an error occurs.
 .Pp
 Possible errors include an invalid byte sequence in the input.
 .Sh SEE ALSO
-.Xr sendsms 1 ,
+.Xr twimsg 1 ,
 .Xr twilog 1 .
 .Rs
 .%T "Adventures in Unicode SMS"
