@@ -4,6 +4,6 @@
 ACCOUNT_SID="AC00000000000000000000000000000000"
 AUTH_TOKEN="00000000000000000000000000000000"
 
-# Default sending phone number for sendsms(1)
+# Default sending phone number for twimsg(1)
 FROM_NUMBER="+14155555555"
 

@@ -99,11 +99,11 @@ AC_ARG_ENABLE(Werror,
 
 # Generated files
 AC_CONFIG_FILES(Makefile)
-AC_CONFIG_FILES(sendsms)
-AC_CONFIG_FILES(sendsms.1)
 AC_CONFIG_FILES(smslen.1)
 AC_CONFIG_FILES(twilog)
 AC_CONFIG_FILES(twilog.1)
+AC_CONFIG_FILES(twimsg)
+AC_CONFIG_FILES(twimsg.1)
 AM_CONFIG_HEADER(config.h)
 
 # Go

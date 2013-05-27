@@ -17,13 +17,13 @@
 .\" $Id$
 .\"
 .Dd May 17, 2013
-.Dt SENDSMS 1
+.Dt TWIMSG 1
 .Os
 .Sh NAME
-.Nm sendsms
+.Nm twimsg
 .Nd Send outgoing SMS message via the Twilio REST API
 .Sh SYNOPSIS
-.Nm sendsms
+.Nm twimsg
 .Bk -words
 .Op Fl e Ar encoding
 .Op Fl c Ar config
