@@ -6,7 +6,7 @@ if [ `uname -s` = 'Darwin' ]; then
     exit 1
 fi
 
-for MANPAGE in sendsms smslen twilog; do
+for MANPAGE in twimsg smslen twilog; do
 
     if [ ! -f ../trunk/"${MANPAGE}".1 ]; then
         echo "../trunk/${MANPAGE}.1 not found" 1>&2

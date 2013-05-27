@@ -1,19 +1,19 @@
-#summary Wikified version of the sendsms man page
+#summary Wikified version of the twimsg man page
 #labels Featured
 
 {{{
-SENDSMS(1)                           BSD General Commands Manual                          SENDSMS(1)
+TWIMSG(1)                            BSD General Commands Manual                           TWIMSG(1)
 
 NAME
-     sendsms -- Send outgoing SMS message via the Twilio REST API
+     twimsg -- Send outgoing SMS message via the Twilio REST API
 
 SYNOPSIS
-     sendsms [-e encoding] [-c config] [-F number] [-f file] [number]
+     twimsg [-e encoding] [-c config] [-F number] [-f file] [number]
 
 DESCRIPTION
-     sendsms attempts to transmit a single outoing SMS message using the Twilio REST API to the
-     specified number.  The message content is read from standard input, or the specified file if
-     the -f flag is used.
+     twimsg attempts to transmit a single outoing SMS message using the Twilio REST API to the spec-
+     ified number.  The message content is read from standard input, or the specified file if the -f
+     flag is used.
 
      The input is automatically truncated at the point at which it would exceed the 140 byte SMS
      payload limit.  See smslen(1) for information on calculating this limit.
@@ -37,7 +37,7 @@ OPTIONS
      -f      Read the message content from the specified file instead of standard input.
 
 EXIT STATUS
-     sendsms exits zero normally, or 1 if an error occurs.
+     twimsg exits zero normally, or 1 if an error occurs.
 
      Errors returned from the Twilio REST API are reported to standard error.
 

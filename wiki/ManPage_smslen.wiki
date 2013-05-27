@@ -50,7 +50,7 @@ EXIT STATUS
      Possible errors include an invalid byte sequence in the input.
 
 SEE ALSO
-     sendsms(1), twilog(1).
+     twimsg(1), twilog(1).
 
      Adventures in Unicode SMS, http://www.twilio.com/engineering/2012/11/08/adventures-in-unicode-
      sms.

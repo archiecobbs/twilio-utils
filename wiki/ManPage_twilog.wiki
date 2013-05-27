@@ -50,7 +50,7 @@ BUGS
      most recent 1000 will be logged.
 
 SEE ALSO
-     cron(8), logger(1), sendsms(1), smslen(1).
+     cron(8), logger(1), twimsg(1), smslen(1).
 
 AUTHOR
      Archie L. Cobbs <archie@dellroad.org>
