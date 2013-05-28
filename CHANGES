@@ -1,4 +1,4 @@
-Version 1.0.3
+Version 1.0.3 (r27) Released May 28, 2013
 
     - Fixed bug in twimsg `-e' flag not transcoding correctly
     - Fixed variable substitution problem in build
