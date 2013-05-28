@@ -21,18 +21,19 @@ DESCRIPTION
 OPTIONS
      -e      Specify input character encoding.  The default is UTF-8.
 
+             Invalid character data is silently discarded.
+
      -c      Specify the configuration file.
 
              This file is simply a shell script that when sourced must define the ACCOUNT_SID and
-             AUTH_TOKEN shell variables containing the corresponding Twilio credentials.
+             AUTH_TOKEN shell variables containing the corresponding Twilio credentials.  This file
+             must also define FROM_NUMBER shell variable if the -F flag is not used to specify the
+             sending SMS phone number.
 
-             This file must also define FROM_NUMBER shell variable unless the -F flag is used to
-             specify the sending SMS phone number.
-
-             If not specified, /etc/twilio.conf is assumed.
+             If the -c flag is not specified, /etc/twilio.conf is assumed.
 
      -F      Specify the sending SMS phone number.  This flag is required if the configuration file
-             does not define FROM_NUMBER.
+             does not define a default FROM_NUMBER.
 
      -f      Read the message content from the specified file instead of standard input.
 
