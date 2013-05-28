@@ -21,3 +21,22 @@ EXTRA_DIST=		CHANGES INSTALL twimsg.in twilog.in result.xsl twilio.conf.sample
 
 smslen_SOURCES=		smslen.c
 
+SUFFIXES=		.in
+.in:
+			rm -f $@; $(subst) < $< >$@
+
+subst=			sed \
+			    -e 's|@bindir[@]|$(bindir)|g' \
+			    -e 's|@CURL[@]|$(CURL)|g' \
+			    -e 's|@DATE_PARSING_STYLE[@]|$(DATE_PARSING_STYLE)|g' \
+			    -e 's|@defaultconf[@]|$(defaultconf)|g' \
+			    -e 's|@ICONV[@]|$(ICONV)|g' \
+			    -e 's|@LOGGER[@]|$(LOGGER)|g' \
+			    -e 's|@PACKAGE[@]|$(PACKAGE)|g' \
+			    -e 's|@PACKAGE_VERSION[@]|$(PACKAGE_VERSION)|g' \
+			    -e 's|@PHP[@]|$(PHP)|g' \
+			    -e 's|@pkgdatadir[@]|$(pkgdatadir)|g' \
+			    -e 's|@TAC[@]|$(TAC)|g' \
+			    -e 's|@XMLSTARLET[@]|$(XMLSTARLET)|g' \
+			    -e 's|@XSLTPROC[@]|$(XSLTPROC)|g'
+
