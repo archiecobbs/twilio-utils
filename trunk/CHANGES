@@ -1,6 +1,7 @@
 Version 1.0.3
 
     - Fixed bug in twimsg `-e' flag not transcoding correctly
+    - Fixed variable substitution problem in build
 
 Version 1.0.2 (r23) Released May 27, 2013
 
