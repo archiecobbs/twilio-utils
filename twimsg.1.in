@@ -25,11 +25,14 @@
 .Sh SYNOPSIS
 .Nm twimsg
 .Bk -words
-.Op Fl e Ar encoding
 .Op Fl c Ar config
+.Op Fl C Ar curlflag
+.Op Fl e Ar encoding
 .Op Fl F Ar number
 .Op Fl f Ar file
-.Op number
+.Op Fl m Ar URL
+.Op Fl t Ar limit
+.Ar number
 .Ek
 .Sh DESCRIPTION
 .Nm
@@ -42,17 +45,11 @@ if the
 .Fl f
 flag is used.
 .Pp
-The input is automatically truncated at the point at which it would exceed the 140 byte SMS payload limit.
-See
-.Xr smslen 1
-for information on calculating this limit.
+The input is automatically truncated at the point at which it would exceed
+.Ar limit
+encoded bytes (default 140).
 .Sh OPTIONS
 .Bl -tag -width Ds
-.It Fl e
-Specify input character encoding.
-The default is UTF-8.
-.Pp
-Invalid character data is silently discarded.
 .It Fl c
 Specify the configuration file.
 .Pp
@@ -72,12 +69,36 @@ If the
 flag is not specified,
 .Pa @defaultconf@
 is assumed.
+.It Fl C
+Pass
+.Ar curlflag
+to
+.Xr curl 1 .
+.It Fl e
+Specify input character encoding.
+The default is UTF-8.
+.Pp
+Invalid character data is silently discarded.
 .It Fl F
 Specify the sending SMS phone number.
 This flag is required if the configuration file does not define a default
 .Pa FROM_NUMBER .
 .It Fl f
 Read the message content from the specified file instead of standard input.
+.It Fl m
+Send an MMS message using the image found at the specified
+.Ar URL .
+This flag may be repeated to send multiple images.
+.It Fl t
+Truncate the message when it would exceed
+.Ar limit
+bytes.
+The default is 140, which keeps it within a single SMS message.
+.Pp
+Note Twilio supports automatic outgoing message concatenation;
+to take advantage of this feature, use
+.Fl t Ar 3200
+instead.
 .El
 .Sh EXIT STATUS
 .Nm
@@ -85,6 +106,7 @@ exits zero normally, or 1 if an error occurs.
 .Pp
 Errors returned from the Twilio REST API are reported to standard error.
 .Sh SEE ALSO
+.Xr curl 1 ,
 .Xr smslen 1 ,
 .Xr twilog 1 .
 .Sh AUTHOR
