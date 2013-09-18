@@ -6,7 +6,7 @@ set -e
 
 # Constants
 DEFAULT_CONFIG_FILE='@defaultconf@'
-MAX_PAYLOAD_BYTES='140'
+DEFAULT_TRUNCATE_LIMIT='140'
 BASE_URL='https://api.twilio.com/'
 ACCOUNTS_PATH='/2010-04-01/Accounts/${ACCOUNT_SID}/SMS/Messages'
 RESULT_XSL='@pkgdatadir@/result.xsl'
@@ -20,12 +20,15 @@ SMSLEN="@bindir@/smslen"
 # Usage message
 usage()
 {
-    echo "Usage: twimsg [-c config.txt] [-e encoding] [-F from-number] [-f file] number" 1>&2
+    echo "Usage: twimsg [-c config.txt] [-C curlflag] [-e encoding] [-F from-number] [-f file] [-m url] [-t limit] number" 1>&2
     echo "Options:" 1>&2
+    echo "    -C    Pass curlflag to curl(1)" 1>&2
     echo "    -c    Specify config file (default \"${DEFAULT_CONFIG_FILE}\")" 1>&2
     echo "    -e    Specify input encoding (default \"${DEFAULT_ENCODING}\")" 1>&2
     echo "    -f    Read message from file (\`-' means stdin (the default))" 1>&2
+    echo "    -m    Include the image at the specified URL via MMS (may be repeated)" 1>&2
     echo "    -F    Specify sending phone number (10 digits)" 1>&2
+    echo "    -t    Truncate input at limit bytes (default ${DEFAULT_TRUNCATE_LIMIT})" 1>&2
 }
 
 # Function to normalize a phone number to the way Twilio likes it
@@ -39,13 +42,20 @@ normalize()
 # Parse flags passed in on the command line
 CONFIG_FILE="${DEFAULT_CONFIG_FILE}"
 ENCODING="${DEFAULT_ENCODING}"
+TRUNCATE_LIMIT="${DEFAULT_TRUNCATE_LIMIT}"
 FROM_NUMBER=""
 INPUT_FILE="-"
+CURL_FLAGS=""
 while [ ${#} -gt 0 ]; do
     case "$1" in
         -c)
             shift
             CONFIG_FILE="${1}"
+            shift
+            ;;
+        -C)
+            shift
+            CURL_FLAGS="${CURL_FLAGS} ${1}"
             shift
             ;;
         -e)
@@ -61,6 +71,21 @@ while [ ${#} -gt 0 ]; do
         -F)
             shift
             FROM_NUMBER="${1}"
+            shift
+            ;;
+        -m)
+            shift
+            IMAGE_URL="${1}"
+            if ! [[ "${IMAGE_URL}" =~ ^https?://[^[:space:]]+$ ]]; then
+                echo "twimsg: invalid image URL \`${IMAGE_URL}'" 1>&2
+                exit 1
+            fi
+            shift
+            CURL_FLAGS="${CURL_FLAGS} --data-urlencode MediaUrl=${IMAGE_URL}"
+            ;;
+        -t)
+            shift
+            TRUNCATE_LIMIT="${1}"
             shift
             ;;
         -h|--help)
@@ -134,16 +159,17 @@ if [ $? -ne 0 ]; then
 fi
 trap "rm -f ${RESPONSE_FILE} ${ERROR_FILE}" 0 2 3 5 10 13 15
 
-# Truncate input to 140 payload bytes and post to Twilio
+# Truncate input and post to Twilio
 cat "${INPUT_FILE}" \
   | "${ICONV}" -c -s -f "${ENCODING}" -t "${TWILIO_ENCODING}" \
-  | "${SMSLEN}" -i "${TWILIO_ENCODING}" -t "${MAX_PAYLOAD_BYTES}" \
+  | "${SMSLEN}" -i "${TWILIO_ENCODING}" -t "${TRUNCATE_LIMIT}" \
   | "${CURL}" --silent \
   --user "${ACCOUNT_SID}:${AUTH_TOKEN}" \
   --data "From=${FROM_NUMBER}" \
   --data "To=${TO_NUMBER}" \
   --data-urlencode "Body@-" \
   --output "${RESPONSE_FILE}" \
+  ${CURL_FLAGS} \
   "${URL}"
 
 # Check result
