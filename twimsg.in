@@ -8,7 +8,7 @@ set -e
 DEFAULT_CONFIG_FILE='@defaultconf@'
 DEFAULT_TRUNCATE_LIMIT='140'
 BASE_URL='https://api.twilio.com/'
-ACCOUNTS_PATH='/2010-04-01/Accounts/${ACCOUNT_SID}/SMS/Messages'
+ACCOUNTS_PATH='/2010-04-01/Accounts/${ACCOUNT_SID}/Messages'
 RESULT_XSL='@pkgdatadir@/result.xsl'
 CURL="@CURL@"
 ICONV="@ICONV@"
