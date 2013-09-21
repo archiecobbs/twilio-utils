@@ -10,7 +10,7 @@
             <xsl:when test="TwilioResponse/RestException">
                 <xsl:apply-templates select="TwilioResponse/RestException"/>
             </xsl:when>
-            <xsl:when test="TwilioResponse/SMSMessage"/>
+            <xsl:when test="TwilioResponse/Message"/>
             <xsl:otherwise>
                 <xsl:text>Invalid XML response received&#10;</xsl:text>
             </xsl:otherwise>

@@ -1,3 +1,7 @@
+Version 1.0.5 (r32) Released Sep 21, 2013
+
+    - Fix bug in 1.0.4 not using updated REST URL
+
 Version 1.0.4 (r30) Released Sep 18, 2013
 
     - Added `-C', `-m' and `-t' flags to twimsg(1)
