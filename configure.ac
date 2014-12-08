@@ -69,6 +69,31 @@ AC_PATH_PROG([TAC], [tac])
 [if test -z "${TAC}"; then]
     AC_MSG_ERROR([tac not found]);
 [fi]
+AC_PATH_PROG([GREP], [grep])
+[if test -z "${GREP}"; then]
+    AC_MSG_ERROR([grep not found]);
+[fi]
+AC_PATH_PROG([SED], [sed])
+[if test -z "${SED}"; then]
+    AC_MSG_ERROR([sed not found]);
+[fi]
+AC_PATH_PROG([DATE], [date])
+[if test -z "${DATE}"; then]
+    AC_MSG_ERROR([date not found]);
+[fi]
+AC_PATH_PROG([SLEEP], [sleep])
+[if test -z "${SLEEP}"; then]
+    AC_MSG_ERROR([sleep not found]);
+[fi]
+AC_PATH_PROG([EXPR], [expr])
+[if test -z "${EXPR}"; then]
+    AC_MSG_ERROR([expr not found]);
+[fi]
+AC_PATH_PROG([HEXDUMP], [hexdump])
+[if test -z "${HEXDUMP}"; then]
+    AC_MSG_ERROR([hexdump not found]);
+[fi]
+AC_CHECK_FILE([/dev/urandom], , AC_MSG_ERROR([/dev/urandom not found]))
 AC_MSG_CHECKING([date parsing style])
 [if [ "`date -u -d 'Wed, 22 May 2013 14:32:48 +0000' '+%Y-%m-%d' 2>/dev/null`" = '2013-05-22' ]; then
     DATE_PARSING_STYLE="Linux"
@@ -82,6 +107,19 @@ AC_MSG_RESULT([${DATE_PARSING_STYLE}])
     AC_MSG_ERROR([cannot figure out how to parse dates using date(1)]);
 [fi]
 AC_SUBST(DATE_PARSING_STYLE)
+AC_MSG_CHECKING([sed extended regular expression flag])
+[if [ "`echo a | sed -r 's/a|b/c/g' 2>/dev/null`" = 'c' ]; then
+    SED_EXTENDED_REGEX_FLAG="-r"
+elif [ "`echo a | sed -E 's/a|b/c/g' 2>/dev/null`" = 'c' ]; then
+    SED_EXTENDED_REGEX_FLAG="-E"
+else
+    SED_EXTENDED_REGEX_FLAG="unknown"
+fi]
+AC_MSG_RESULT([${SED_EXTENDED_REGEX_FLAG}])
+[if [ "${SED_EXTENDED_REGEX_FLAG}" = 'unknown' ]; then]
+    AC_MSG_ERROR([cannot figure out sed(1) extended regular expression flag]);
+[fi]
+AC_SUBST(SED_EXTENDED_REGEX_FLAG)
 
 # Config file default location
 AC_SUBST(defaultconf, [/etc/twilio.conf])
@@ -106,6 +144,7 @@ AC_CONFIG_FILES(Makefile)
 AC_CONFIG_FILES(smslen.1)
 AC_CONFIG_FILES(twilog.1)
 AC_CONFIG_FILES(twimsg.1)
+AC_CONFIG_FILES(twiping.1)
 AM_CONFIG_HEADER(config.h)
 
 # Go

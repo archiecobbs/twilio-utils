@@ -7,17 +7,17 @@
 
 bin_PROGRAMS=		smslen
 
-dist_bin_SCRIPTS=	twimsg twilog
+dist_bin_SCRIPTS=	twimsg twilog twiping
 
-man_MANS=		smslen.1 twimsg.1 twilog.1
+man_MANS=		smslen.1 twimsg.1 twilog.1 twiping.1
 
-pkgdata_DATA=		result.xsl
+pkgdata_DATA=		result.xsl twiping.xsl
 
 docdir=			$(datadir)/doc/packages/$(PACKAGE)
 
 doc_DATA=		CHANGES COPYING README twilio.conf.sample
 
-EXTRA_DIST=		CHANGES INSTALL twimsg.in twilog.in result.xsl twilio.conf.sample
+EXTRA_DIST=		CHANGES INSTALL twimsg.in twilog.in twiping.in result.xsl twiping.xsl twilio.conf.sample
 
 smslen_SOURCES=		smslen.c
 
@@ -37,6 +37,13 @@ subst=			sed \
 			    -e 's|@PHP[@]|$(PHP)|g' \
 			    -e 's|@pkgdatadir[@]|$(pkgdatadir)|g' \
 			    -e 's|@TAC[@]|$(TAC)|g' \
+			    -e 's|@GREP[@]|$(GREP)|g' \
+			    -e 's|@SED[@]|$(SED)|g' \
+			    -e 's|@SED_EXTENDED_REGEX_FLAG[@]|$(SED_EXTENDED_REGEX_FLAG)|g' \
+			    -e 's|@DATE[@]|$(DATE)|g' \
+			    -e 's|@SLEEP[@]|$(SLEEP)|g' \
+			    -e 's|@EXPR[@]|$(EXPR)|g' \
+			    -e 's|@HEXDUMP[@]|$(HEXDUMP)|g' \
 			    -e 's|@XMLSTARLET[@]|$(XMLSTARLET)|g' \
 			    -e 's|@XSLTPROC[@]|$(XSLTPROC)|g'
 
