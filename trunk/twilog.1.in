@@ -93,6 +93,7 @@ was run, only the most recent 1000 will be logged.
 .Xr cron 8 ,
 .Xr logger 1 ,
 .Xr twimsg 1 ,
+.Xr twiping 1 ,
 .Xr smslen 1 .
 .Sh AUTHOR
 .An Archie L. Cobbs Aq archie@dellroad.org

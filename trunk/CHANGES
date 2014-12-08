@@ -1,3 +1,7 @@
+Version Next
+
+    - Added twiping(1) utility
+
 Version 1.0.5 (r32) Released Sep 21, 2013
 
     - Fix bug in 1.0.4 not using updated REST URL

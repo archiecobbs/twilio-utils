@@ -13,6 +13,8 @@ DEFAULT_CREDSFILE='@defaultconf@'
 PAGESIZE="1000"
 XMLSTARLET="@XMLSTARLET@"
 LOGGER="@LOGGER@"
+DATE="@DATE@"
+GREP="@GREP@"
 PHP="@PHP@"
 TAC="@TAC@"
 DATE_PARSING_STYLE="@DATE_PARSING_STYLE@"
@@ -49,10 +51,10 @@ parse_date()
 {
     case "${DATE_PARSING_STYLE}" in
         Linux)
-            date -d "${1}" "+${2}"
+            "${DATE}" -d "${1}" "+${2}"
             ;;
         BSD)
-            date -j -f '%a, %d %b %Y %T %z' "${1}" "+${2}"
+            "${DATE}" -j -f '%a, %d %b %Y %T %z' "${1}" "+${2}"
             ;;
         *)
             echo "twilog: unknown date parsing style: ${DATE_PARSING_STYLE}" 1>&2
@@ -89,7 +91,7 @@ while [ ${#} -gt 0 ]; do
         -f)
             shift
             FACILITY="${1}"
-            if ! echo "${FACILITY}" | grep -qE "${FACILITY_REGEX}"; then
+            if ! echo "${FACILITY}" | "${GREP}" -qE "${FACILITY_REGEX}"; then
                 echo "${NAME}: invalid facility \`${FACILITY}'" 1>&2
                 exit 1
             fi
