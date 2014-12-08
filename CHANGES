@@ -1,6 +1,7 @@
 Version Next
 
     - Added twiping(1) utility
+    - Allow sending to/from short codes
 
 Version 1.0.5 (r32) Released Sep 21, 2013
 
