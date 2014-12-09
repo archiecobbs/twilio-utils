@@ -25,9 +25,10 @@
 .Sh SYNOPSIS
 .Nm twiping
 .Bk -words
-.Op Fl c Ar config
-.Op Fl C Ar curlflag
+.Op Fl c Ar file
+.Op Fl C Ar flag
 .Op Fl F Ar number
+.Op Fl t Ar testcode
 .Op Fl w Ar timeout
 .Ar number
 .Ek
@@ -65,13 +66,18 @@ flag is not specified,
 is assumed.
 .It Fl C
 Pass
-.Ar curlflag
+.Ar flag
 to
 .Xr curl 1 .
 .It Fl F
 Specify the sending SMS phone number.
 This flag is required if the configuration file does not define a default
 .Pa FROM_NUMBER .
+.It Fl t
+Don't generate or send a test code.
+Instead, assume the specified
+.Ar testcode
+has just been sent and expect a reply normally.
 .It Fl w
 Wait up to
 .Ar timeout
