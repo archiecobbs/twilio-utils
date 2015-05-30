@@ -2,8 +2,6 @@
 #
 # twilio-utils - Command line utilities for Twilio users
 # 
-# $Id$
-#
 
 bin_PROGRAMS=		smslen
 

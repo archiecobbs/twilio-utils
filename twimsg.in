@@ -1,5 +1,4 @@
 #!/bin/bash
-# $Id$
 
 # Bail on error
 set -e

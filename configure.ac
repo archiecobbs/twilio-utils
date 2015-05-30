@@ -15,15 +15,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-# $Id$
-#
 
-AC_INIT([twilio-utils - Command line utilities for Twilio users], [1.0.6], [http://twilio-utils.googlecode.com/], [twilio-utils])
+AC_INIT([twilio-utils - Command line utilities for Twilio users], [1.0.6], [https://github.com/archiecobbs/twilio-utils], [twilio-utils])
 AC_CONFIG_AUX_DIR(scripts)
 AM_INIT_AUTOMAKE
 dnl AM_MAINTAINER_MODE
 AC_PREREQ(2.59)
-AC_REVISION($Id$)
 AC_PREFIX_DEFAULT(/usr)
 AC_PROG_MAKE_SET
 

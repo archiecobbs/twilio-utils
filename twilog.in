@@ -1,5 +1,4 @@
 #!/bin/bash
-# $Id$
 
 # Constants
 BASE_URL='https://api.twilio.com/'
