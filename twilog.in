@@ -203,15 +203,15 @@ if [ "${CURL_RESULT}" -ne 0 ]; then
 fi
 
 # Check for REST error XML response
-ERROR_CODE=`"${XMLSTARLET}" sel -T -t -m /TwilioResponse/RestException -v Code -nl ${RESPONSE_FILE} 2>/dev/null`
-ERROR_MESSAGE=`"${XMLSTARLET}" sel -T -t -m /TwilioResponse/RestException -v Message -nl ${RESPONSE_FILE} 2>/dev/null`
+ERROR_CODE=`"${XMLSTARLET}" sel -T -t -m /TwilioResponse/RestException -v Code -n ${RESPONSE_FILE} 2>/dev/null`
+ERROR_MESSAGE=`"${XMLSTARLET}" sel -T -t -m /TwilioResponse/RestException -v Message -n ${RESPONSE_FILE} 2>/dev/null`
 if [ -n "${ERROR_CODE}" -o -n "${ERROR_MESSAGE}" ]; then
     echo "twilog: Twilio REST error #${ERROR_CODE}: ${ERROR_MESSAGE}" 1>&2
     exit 1
 fi
 
 # Extract SID of the most recent message (if any)
-NEW_LAST_SID=`"${XMLSTARLET}" sel -T -t -m '/TwilioResponse/Notifications/Notification[1]' -v Sid -nl ${RESPONSE_FILE} 2>&1`
+NEW_LAST_SID=`"${XMLSTARLET}" sel -T -t -m '/TwilioResponse/Notifications/Notification[1]' -v Sid -n ${RESPONSE_FILE} 2>&1`
 if ! [[ "${NEW_LAST_SID}" =~ ^(NO[0-9a-f]{32})?$ ]]; then
     echo "twilog: error parsing result: ${NEW_LAST_SID}" 1>&2
     exit 1
@@ -230,7 +230,7 @@ if [ -z "${NEW_LAST_SID}" ]; then
 elif [ -n "${LAST_SID}" ]; then
 
     # Find the ${LAST_SID} in the returned notification list
-    FOUND_LAST_SID=`"${XMLSTARLET}" sel -T -t -m "/TwilioResponse/Notifications/Notification[Sid='${LAST_SID}']" -v Sid -nl ${RESPONSE_FILE}`
+    FOUND_LAST_SID=`"${XMLSTARLET}" sel -T -t -m "/TwilioResponse/Notifications/Notification[Sid='${LAST_SID}']" -v Sid -n ${RESPONSE_FILE}`
     if [ -n "${FOUND_LAST_SID}" ]; then
         NEWER_XPATH="/TwilioResponse/Notifications/Notification[Sid='${LAST_SID}']/preceding-sibling::Notification"
     else
@@ -239,7 +239,7 @@ elif [ -n "${LAST_SID}" ]; then
 fi
 
 # Process SIDs of newer messages (in reverse order)
-"${XMLSTARLET}" sel -T -t -m "${NEWER_XPATH}" -v "concat(Sid, ' ', Log, ' ', MessageDate)" -nl ${RESPONSE_FILE} | "${TAC}" | while read SID LEVEL MESSAGE_DATE; do
+"${XMLSTARLET}" sel -T -t -m "${NEWER_XPATH}" -v "concat(Sid, ' ', Log, ' ', MessageDate)" -n ${RESPONSE_FILE} | "${TAC}" | while read SID LEVEL MESSAGE_DATE; do
 
     # Convert level: error, warning, or info
     case "${LEVEL}" in
@@ -255,7 +255,7 @@ fi
     esac
 
     # Get message body; compress duplicate lines
-    MESSAGE=`"${XMLSTARLET}" sel -T -t -m "/TwilioResponse/Notifications/Notification[Sid='${SID}']" -v MessageText -nl ${RESPONSE_FILE} | uniq`
+    MESSAGE=`"${XMLSTARLET}" sel -T -t -m "/TwilioResponse/Notifications/Notification[Sid='${SID}']" -v MessageText -n ${RESPONSE_FILE} | uniq`
 
     # Check for an URL-encoded message; if found, decode it
     if [[ "${MESSAGE}" =~ ^(([[:alnum:]_.~+-]|%[[:xdigit:]]{2})+=([[:alnum:]_.~+-]|%[[:xdigit:]]{2})*)(&(([[:alnum:]_.~+-]|%[[:xdigit:]]{2})+=([[:alnum:]_.~+-]|%[[:xdigit:]]{2})*))*$ ]]; then
@@ -277,7 +277,7 @@ fi
 done
 
 # Calculate the start date for next time, which is the date of the most recent message we saw (if any)
-NEW_START_DATE=`"${XMLSTARLET}" sel -T -t -m '/TwilioResponse/Notifications/Notification[1]' -v MessageDate -nl ${RESPONSE_FILE} 2>/dev/null`
+NEW_START_DATE=`"${XMLSTARLET}" sel -T -t -m '/TwilioResponse/Notifications/Notification[1]' -v MessageDate -n ${RESPONSE_FILE} 2>/dev/null`
 if [ -z "${NEW_START_DATE}" ]; then
     NEW_START_DATE="${START_DATE}"
 else
