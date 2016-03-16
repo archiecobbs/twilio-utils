@@ -38,7 +38,7 @@ AC_DEFINE(_DARWIN_C_SOURCE, 1, MacOS functions)
 # Check for required programs
 AC_PROG_INSTALL
 AC_PROG_CC
-AC_PATH_PROG([XMLSTARLET], [xml])
+AC_PATH_PROGS([XMLSTARLET], [xml xmlstarlet])
 [if test -z "${XMLSTARLET}"; then]
     AC_MSG_ERROR([xmlstarlet not found]);
 [fi]
