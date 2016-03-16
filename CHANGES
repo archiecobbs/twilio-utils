@@ -2,6 +2,7 @@ Version Next
 
     - Added twiping(1) utility
     - Allow sending to/from short codes
+    - Find xmlstarlet as 'xml' or 'xmlstarlet' (pull #1)
 
 Version 1.0.5 (r32) Released Sep 21, 2013
 
