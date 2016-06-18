@@ -42,7 +42,7 @@ normalize()
 CONFIG_FILE="${DEFAULT_CONFIG_FILE}"
 ENCODING="${DEFAULT_ENCODING}"
 TRUNCATE_LIMIT="${DEFAULT_TRUNCATE_LIMIT}"
-FROM_NUMBER=""
+OVERRIDE_FROM_NUMBER=""
 INPUT_FILE="-"
 CURL_FLAGS=""
 while [ ${#} -gt 0 ]; do
@@ -69,7 +69,7 @@ while [ ${#} -gt 0 ]; do
             ;;
         -F)
             shift
-            FROM_NUMBER="${1}"
+            OVERRIDE_FROM_NUMBER="${1}"
             shift
             ;;
         -m)
@@ -118,6 +118,11 @@ fi
 
 # Parse config file
 . "${CONFIG_FILE}"
+
+# Override some config with command line flags
+if [ -n "${OVERRIDE_FROM_NUMBER}" ]; then
+    FROM_NUMBER="${OVERRIDE_FROM_NUMBER}"
+fi
 
 # Normalize numbers
 FROM_NUMBER=`normalize "${FROM_NUMBER}"`
