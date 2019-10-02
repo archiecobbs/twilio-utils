@@ -27,7 +27,10 @@ usage()
     echo "    -F from-number    Specify sending phone number (E.164 format)" 1>&2
     echo "    -f file           Read message content from file (\`-' means stdin (the default))" 1>&2
     echo "    -m url            Include the image at the specified URL via MMS (may be repeated)" 1>&2
+    echo "    -P                Ask for auth token from the terminal" 1>&2
+    echo "    -p auth-token     Specify auth token (default read AUTH_TOKEN from config file)" 1>&2
     echo "    -t limit          Truncate input after limit bytes (default ${DEFAULT_TRUNCATE_LIMIT})" 1>&2
+    echo "    -u account-sid    Specify Account SID (default read ACCOUNT_SID from config file)" 1>&2
 }
 
 # Function to normalize a phone number to the way Twilio likes it
@@ -43,6 +46,8 @@ CONFIG_FILE="${DEFAULT_CONFIG_FILE}"
 ENCODING="${DEFAULT_ENCODING}"
 TRUNCATE_LIMIT="${DEFAULT_TRUNCATE_LIMIT}"
 OVERRIDE_FROM_NUMBER=""
+OVERRIDE_ACCOUNT_SID=""
+OVERRIDE_AUTH_TOKEN=""
 INPUT_FILE="-"
 CURL_FLAGS=""
 while [ ${#} -gt 0 ]; do
@@ -82,9 +87,23 @@ while [ ${#} -gt 0 ]; do
             shift
             CURL_FLAGS="${CURL_FLAGS} --data-urlencode MediaUrl=${IMAGE_URL}"
             ;;
+        -p)
+            shift
+            OVERRIDE_AUTH_TOKEN="${1}"
+            shift
+            ;;
+        -P)
+            read -s -p 'Auth Token: ' OVERRIDE_AUTH_TOKEN
+            shift
+            ;;
         -t)
             shift
             TRUNCATE_LIMIT="${1}"
+            shift
+            ;;
+        -u)
+            shift
+            OVERRIDE_ACCOUNT_SID="${1}"
             shift
             ;;
         -h|--help)
@@ -122,6 +141,12 @@ fi
 # Override some config with command line flags
 if [ -n "${OVERRIDE_FROM_NUMBER}" ]; then
     FROM_NUMBER="${OVERRIDE_FROM_NUMBER}"
+fi
+if [ -n "${OVERRIDE_ACCOUNT_SID}" ]; then
+    ACCOUNT_SID="${OVERRIDE_ACCOUNT_SID}"
+fi
+if [ -n "${OVERRIDE_AUTH_TOKEN}" ]; then
+    AUTH_TOKEN="${OVERRIDE_AUTH_TOKEN}"
 fi
 
 # Normalize numbers

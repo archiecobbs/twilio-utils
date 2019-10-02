@@ -32,7 +32,10 @@ usage()
     echo "    -c file           Specify config file (default \"${DEFAULT_CONFIG_FILE}\")" 1>&2
     echo "    -F from-number    Specify sending phone number (E.164 format)" 1>&2
     echo "    -f format         Specify alternate printf(1) format string (default \"${FORMAT_STRING}\")" 1>&2
+    echo "    -p auth-token     Specify auth token (default read AUTH_TOKEN from config file)" 1>&2
+    echo "    -P                Ask for auth token from the terminal" 1>&2
     echo "    -t testcode       Assume outgoing SMS message with \"testcode\" has already been sent" 1>&2
+    echo "    -u account-sid    Specify Account SID (default read ACCOUNT_SID from config file)" 1>&2
     echo "    -w timeout        Specify maximum response timeout in seconds (default ${MAX_WAIT_TIME})" 1>&2
 }
 
@@ -48,6 +51,8 @@ normalize()
 CONFIG_FILE="${DEFAULT_CONFIG_FILE}"
 TRUNCATE_LIMIT="${DEFAULT_TRUNCATE_LIMIT}"
 OVERRIDE_FROM_NUMBER=""
+OVERRIDE_ACCOUNT_SID=""
+OVERRIDE_AUTH_TOKEN=""
 CURL_FLAGS=""
 TESTCODE=""
 while [ ${#} -gt 0 ]; do
@@ -72,9 +77,23 @@ while [ ${#} -gt 0 ]; do
             FORMAT_STRING="${1}"
             shift
             ;;
+        -p)
+            shift
+            OVERRIDE_AUTH_TOKEN="${1}"
+            shift
+            ;;
+        -P)
+            read -s -p 'Auth Token: ' OVERRIDE_AUTH_TOKEN
+            shift
+            ;;
         -t)
             shift
             TESTCODE="${1}"
+            shift
+            ;;
+        -u)
+            shift
+            OVERRIDE_ACCOUNT_SID="${1}"
             shift
             ;;
         -w)
@@ -117,6 +136,12 @@ fi
 # Override some config with command line flags
 if [ -n "${OVERRIDE_FROM_NUMBER}" ]; then
     FROM_NUMBER="${OVERRIDE_FROM_NUMBER}"
+fi
+if [ -n "${OVERRIDE_ACCOUNT_SID}" ]; then
+    ACCOUNT_SID="${OVERRIDE_ACCOUNT_SID}"
+fi
+if [ -n "${OVERRIDE_AUTH_TOKEN}" ]; then
+    AUTH_TOKEN="${OVERRIDE_AUTH_TOKEN}"
 fi
 
 # Normalize numbers

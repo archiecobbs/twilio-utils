@@ -30,6 +30,9 @@
 .Op Fl f Ar file
 .Op Fl m Ar URL
 .Op Fl t Ar limit
+.Op Fl u Ar account-sid
+.Op Fl p Ar auth-token
+.Op Fl P
 .Ar dest-number
 .Ek
 .Sh DESCRIPTION
@@ -90,6 +93,12 @@ Read the message content from the specified file instead of standard input.
 Send an MMS message using the image found at the specified
 .Ar URL .
 This flag may be repeated to send multiple images.
+.It Fl p
+Specify authentication token, overriding
+.Pa AUTH_TOKEN
+from the configuration file, if any.
+.It Fl P
+Read authentication token from the terminal.
 .It Fl t
 Truncate the message when it would exceed
 .Ar limit
@@ -103,6 +112,10 @@ However, not all carriers support message concatenation.
 Specify a value of
 .Fl t Ar 140
 to ensure the message fits within a single SMS message chunk.
+.It Fl u
+Specify Account SID, overriding
+.Pa ACCOUNT_SID
+from the configuration file, if any.
 .El
 .Sh EXIT STATUS
 .Nm

@@ -28,6 +28,9 @@
 .Op Fl F Ar from-number
 .Op Fl f Ar format
 .Op Fl t Ar testcode
+.Op Fl u Ar account-sid
+.Op Fl p Ar auth-token
+.Op Fl P
 .Op Fl w Ar timeout
 .Ar dest-number
 .Ek
@@ -83,11 +86,21 @@ format string; the default is
 Specify the sending SMS phone number.
 This flag is required if the configuration file does not define a default
 .Pa FROM_NUMBER .
+.It Fl p
+Specify authentication token, overriding
+.Pa AUTH_TOKEN
+from the configuration file, if any.
+.It Fl P
+Read authentication token from the terminal.
 .It Fl t
 Don't generate or send a test code.
 Instead, assume the specified
 .Ar testcode
 has just been sent and expect a reply normally.
+.It Fl u
+Specify Account SID, overriding
+.Pa ACCOUNT_SID
+from the configuration file, if any.
 .It Fl w
 Wait up to
 .Ar timeout
