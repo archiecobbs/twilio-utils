@@ -31,7 +31,7 @@ usage()
     echo "Options:" 1>&2
     echo "    -C    Pass curlflag to curl(1)" 1>&2
     echo "    -c    Specify config file (default \"${DEFAULT_CONFIG_FILE}\")" 1>&2
-    echo "    -F    Specify sending phone number (10 digits)" 1>&2
+    echo "    -F    Specify sending phone number (E.164 format)" 1>&2
     echo "    -f    Specify alternate printf(1) format string (default \"${FORMAT_STRING}\")" 1>&2
     echo "    -t    Assume outgoing SMS message with \`testcode' has already been sent" 1>&2
     echo "    -w    Specify response timeout in seconds (default ${MAX_WAIT_TIME})" 1>&2

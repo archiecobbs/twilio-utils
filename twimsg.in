@@ -26,7 +26,7 @@ usage()
     echo "    -e    Specify input encoding (default \"${DEFAULT_ENCODING}\")" 1>&2
     echo "    -f    Read message from file (\`-' means stdin (the default))" 1>&2
     echo "    -m    Include the image at the specified URL via MMS (may be repeated)" 1>&2
-    echo "    -F    Specify sending phone number (10 digits)" 1>&2
+    echo "    -F    Specify sending phone number (E.164 format)" 1>&2
     echo "    -t    Truncate input at limit bytes (default ${DEFAULT_TRUNCATE_LIMIT})" 1>&2
 }
 
