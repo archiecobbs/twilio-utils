@@ -23,13 +23,13 @@
 .Sh SYNOPSIS
 .Nm twiping
 .Bk -words
-.Op Fl c Ar file
-.Op Fl C Ar flag
-.Op Fl F Ar number
+.Op Fl c Ar config-file
+.Op Fl C Ar curl-flag
+.Op Fl F Ar from-number
 .Op Fl f Ar format
 .Op Fl t Ar testcode
 .Op Fl w Ar timeout
-.Ar number
+.Ar dest-number
 .Ek
 .Sh DESCRIPTION
 .Nm

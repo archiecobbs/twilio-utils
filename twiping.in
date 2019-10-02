@@ -26,15 +26,14 @@ PAGE_SIZE="500"
 # Usage message
 usage()
 {
-    echo "Usage: twiping [-c config.txt] [-C curlflag] [-F from-number] [-f format-string] [-t testcode]" 1>&2
-    echo "               [-w timeout] dest-number" 1>&2
+    echo "Usage: twiping [options] dest-number" 1>&2
     echo "Options:" 1>&2
-    echo "    -C    Pass curlflag to curl(1)" 1>&2
-    echo "    -c    Specify config file (default \"${DEFAULT_CONFIG_FILE}\")" 1>&2
-    echo "    -F    Specify sending phone number (E.164 format)" 1>&2
-    echo "    -f    Specify alternate printf(1) format string (default \"${FORMAT_STRING}\")" 1>&2
-    echo "    -t    Assume outgoing SMS message with \`testcode' has already been sent" 1>&2
-    echo "    -w    Specify response timeout in seconds (default ${MAX_WAIT_TIME})" 1>&2
+    echo "    -C curlflag       Pass curlflag to curl(1)" 1>&2
+    echo "    -c file           Specify config file (default \"${DEFAULT_CONFIG_FILE}\")" 1>&2
+    echo "    -F from-number    Specify sending phone number (E.164 format)" 1>&2
+    echo "    -f format         Specify alternate printf(1) format string (default \"${FORMAT_STRING}\")" 1>&2
+    echo "    -t testcode       Assume outgoing SMS message with \"testcode\" has already been sent" 1>&2
+    echo "    -w timeout        Specify maximum response timeout in seconds (default ${MAX_WAIT_TIME})" 1>&2
 }
 
 # Function to normalize a phone number to the way Twilio likes it

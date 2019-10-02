@@ -19,15 +19,15 @@ SMSLEN="@bindir@/smslen"
 # Usage message
 usage()
 {
-    echo "Usage: twimsg [-c config.txt] [-C curlflag] [-e encoding] [-F from-number] [-f file] [-m url] [-t limit] number" 1>&2
+    echo "Usage: twimsg [options] dest-number" 1>&2
     echo "Options:" 1>&2
-    echo "    -C    Pass curlflag to curl(1)" 1>&2
-    echo "    -c    Specify config file (default \"${DEFAULT_CONFIG_FILE}\")" 1>&2
-    echo "    -e    Specify input encoding (default \"${DEFAULT_ENCODING}\")" 1>&2
-    echo "    -f    Read message from file (\`-' means stdin (the default))" 1>&2
-    echo "    -m    Include the image at the specified URL via MMS (may be repeated)" 1>&2
-    echo "    -F    Specify sending phone number (E.164 format)" 1>&2
-    echo "    -t    Truncate input at limit bytes (default ${DEFAULT_TRUNCATE_LIMIT})" 1>&2
+    echo "    -C curlflag       Pass curlflag to curl(1)" 1>&2
+    echo "    -c file           Specify config file (default \"${DEFAULT_CONFIG_FILE}\")" 1>&2
+    echo "    -e encoding       Specify input encoding (default \"${DEFAULT_ENCODING}\")" 1>&2
+    echo "    -F from-number    Specify sending phone number (E.164 format)" 1>&2
+    echo "    -f file           Read message content from file (\`-' means stdin (the default))" 1>&2
+    echo "    -m url            Include the image at the specified URL via MMS (may be repeated)" 1>&2
+    echo "    -t limit          Truncate input after limit bytes (default ${DEFAULT_TRUNCATE_LIMIT})" 1>&2
 }
 
 # Function to normalize a phone number to the way Twilio likes it

@@ -23,14 +23,14 @@
 .Sh SYNOPSIS
 .Nm twimsg
 .Bk -words
-.Op Fl c Ar config
-.Op Fl C Ar curlflag
+.Op Fl c Ar config-file
+.Op Fl C Ar curl-flag
 .Op Fl e Ar encoding
-.Op Fl F Ar number
+.Op Fl F Ar from-number
 .Op Fl f Ar file
 .Op Fl m Ar URL
 .Op Fl t Ar limit
-.Ar number
+.Ar dest-number
 .Ek
 .Sh DESCRIPTION
 .Nm
