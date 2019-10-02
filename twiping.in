@@ -11,6 +11,7 @@ RESULT_XSL='@pkgdatadir@/result.xsl'
 TWIPING_XSL='@pkgdatadir@/twiping.xsl'
 FORMAT_STRING="TEST%s"
 SLEEP_INTERVAL='3'
+REPLY_PATTERN="@TESTCODE@"
 CURL="@CURL@"
 SED="@SED@"
 GREP="@GREP@"
@@ -32,6 +33,7 @@ usage()
     echo "    -c file           Specify config file (default \"${DEFAULT_CONFIG_FILE}\")" 1>&2
     echo "    -F from-number    Specify sending phone number (E.164 format)" 1>&2
     echo "    -f format         Specify alternate printf(1) format string (default \"${FORMAT_STRING}\")" 1>&2
+    echo "    -m reply-pattern  Specify extended regular expression with which to match response" 1>&2
     echo "    -p auth-token     Specify auth token (default read AUTH_TOKEN from config file)" 1>&2
     echo "    -P                Ask for auth token from the terminal" 1>&2
     echo "    -t testcode       Assume outgoing SMS message with \"testcode\" has already been sent" 1>&2
@@ -53,6 +55,7 @@ TRUNCATE_LIMIT="${DEFAULT_TRUNCATE_LIMIT}"
 OVERRIDE_FROM_NUMBER=""
 OVERRIDE_ACCOUNT_SID=""
 OVERRIDE_AUTH_TOKEN=""
+OVERRIDE_REPLY_PATTERN=""
 CURL_FLAGS=""
 TESTCODE=""
 while [ ${#} -gt 0 ]; do
@@ -75,6 +78,11 @@ while [ ${#} -gt 0 ]; do
         -f)
             shift
             FORMAT_STRING="${1}"
+            shift
+            ;;
+        -m)
+            shift
+            OVERRIDE_REPLY_PATTERN="${1}"
             shift
             ;;
         -p)
@@ -145,6 +153,9 @@ if [ -n "${OVERRIDE_ACCOUNT_SID}" ]; then
 fi
 if [ -n "${OVERRIDE_AUTH_TOKEN}" ]; then
     AUTH_TOKEN="${OVERRIDE_AUTH_TOKEN}"
+fi
+if [ -n "${OVERRIDE_REPLY_PATTERN}" ]; then
+    REPLY_PATTERN="${OVERRIDE_REPLY_PATTERN}"
 fi
 
 # Normalize numbers
@@ -226,6 +237,9 @@ if [ -s "${ERROR_FILE}" ]; then
     exit 1
 fi
 
+# Substitute test code into ${REPLY_PATTERN}
+REPLY_PATTERN=`echo "${REPLY_PATTERN}" | sed "${SED_EXTENDED_REGEX_FLAG}" 's|@TESTCODE@|'"${TESTCODE}"'|g'`
+
 # Wait for response
 START_TIME=`"${DATE}" -u +%s`
 RESPONSE_PATTERN='^(SM[[:xdigit:]]{32})/([0-9+]+)/([0-9+]+)/([^/]+)/(.*)$'
@@ -267,8 +281,8 @@ while true; do
     fi
 
     # Find reply containing our test code detected, if any
-    if "${GREP}" -Fq "${TESTCODE}" "${ERROR_FILE}"; then
-        "${GREP}" -F "${TESTCODE}" "${ERROR_FILE}" \
+    if "${GREP}" -Eq "${REPLY_PATTERN}" "${ERROR_FILE}"; then
+        "${GREP}" -E "${REPLY_PATTERN}" "${ERROR_FILE}" \
           | "${SED}" -n "${SED_EXTENDED_REGEX_FLAG}" \
             -e 's|'"${RESPONSE_PATTERN}"'|twiping: got response from \2 after '"${ELAPSED_TIME}"' seconds: \5|g'
         break

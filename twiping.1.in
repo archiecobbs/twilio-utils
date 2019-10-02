@@ -27,6 +27,7 @@
 .Op Fl C Ar curl-flag
 .Op Fl F Ar from-number
 .Op Fl f Ar format
+.Op Fl m Ar reply-pattern
 .Op Fl t Ar testcode
 .Op Fl u Ar account-sid
 .Op Fl p Ar auth-token
@@ -41,12 +42,17 @@ to the specified
 .Ar number ,
 and then waits for an SMS response containing the same test code, using the Twilio REST API.
 .Pp
-The test message has the form
+By default, the test message has the form
 .Ar TESTxxxxxxxx
-where the `x' characters are replaced by random hex digits.
-Only the hex digits (the
+where the `x' characters are replaced by random hex digits,
+and only the hex digits (the
 .Ar xxxxxxxx
 part) are matched in the reply.
+This behavior can be changed using the
+.Fl t
+and
+.Fl m
+flags.
 .Pp
 Phone numbers must be specified in E.164 format, i.e., with a leading plus sign and followed by the country code,
 or as a 5 or 6 digit short code.
@@ -81,7 +87,10 @@ to
 Specify an alternate
 .Xr printf 1
 format string; the default is
-.Ar "TEST%s"
+.Ar "TEST%s" .
+The format string should contain one instance of
+.Ar %s ,
+which will be replaced by the test code.
 .It Fl F
 Specify the sending SMS phone number.
 This flag is required if the configuration file does not define a default
@@ -90,6 +99,13 @@ This flag is required if the configuration file does not define a default
 Specify authentication token, overriding
 .Pa AUTH_TOKEN
 from the configuration file, if any.
+.It Fl m
+Match responses using the specified extended regular expression.
+Any occurrences of
+.Ar @TESTCODE@
+within
+.Ar reply-pattern
+will be replaced with the test code.
 .It Fl P
 Read authentication token from the terminal.
 .It Fl t
