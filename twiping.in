@@ -22,6 +22,7 @@ HEXDUMP="@HEXDUMP@"
 XSLTPROC="@XSLTPROC@"
 MAX_WAIT_TIME="30"
 PAGE_SIZE="500"
+DATE_PARSING_STYLE="@DATE_PARSING_STYLE@"
 
 # Usage message
 usage()
@@ -46,6 +47,25 @@ normalize()
     echo ${1+"$@"} | sed -r \
       -e 's/[^0-9]//g' \
       -e 's/^1?([0-9]{10})$/+1\1/g'
+}
+
+# Parse a timestamp and print the result in UTC:
+#   $1 = Twilio date
+#   $2 = Output format string
+parse_date()
+{
+    case "${DATE_PARSING_STYLE}" in
+        Linux)
+            "${DATE}" -u -d "${1}" "+${2}"
+            ;;
+        BSD)
+            "${DATE}" -u -j -f '%a, %d %b %Y %T %z' "${1}" "+${2}"
+            ;;
+        *)
+            echo "twilog: unknown date parsing style: ${DATE_PARSING_STYLE}" 1>&2
+            exit 1
+            ;;
+    esac
 }
 
 # Parse flags passed in on the command line
@@ -280,7 +300,7 @@ while true; do
 
     # Search for reply containing our test code detected after ${START_TIME}, if any
     while IFS=/ read _SID _FROM _TO _DATE _BODY; do
-        RESPONSE_TIME=`date -u -d "${_DATE}" +%s`
+        RESPONSE_TIME=`parse_date "${_DATE}" '%s'`
         if [ "${RESPONSE_TIME}" -ge "${START_TIME}" ]; then
             echo "twiping: response from ${_FROM} after ${ELAPSED_TIME} seconds: ${_BODY}"
             exit 0
