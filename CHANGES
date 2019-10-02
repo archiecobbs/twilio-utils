@@ -1,7 +1,7 @@
 Version Next
 
     - Added twiping(1) utility
-    - Allow sending to/from short codes
+    - Allow sending to/from short codes (but see BUGS)
     - Find xmlstarlet as 'xml' or 'xmlstarlet' (pull #1)
     - Fixed bug in twimsg(1) where `-F' was ignored
 

@@ -14,7 +14,7 @@
 .\" License for the specific language governing permissions and limitations
 .\" under the License.
 .\"
-.Dd May 17, 2013
+.Dd Oct 2, 2019
 .Dt TWIMSG 1
 .Os
 .Sh NAME
@@ -103,6 +103,8 @@ instead.
 exits zero normally, or 1 if an error occurs.
 .Pp
 Errors returned from the Twilio REST API are reported to standard error.
+.Sh BUGS
+The Twilio API is unable to communicate with other short codes, whether managed by Twilio or not.
 .Sh SEE ALSO
 .Xr curl 1 ,
 .Xr smslen 1 ,

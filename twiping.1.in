@@ -14,7 +14,7 @@
 .\" License for the specific language governing permissions and limitations
 .\" under the License.
 .\"
-.Dd Dec 8, 2014
+.Dd Oct 2, 2019
 .Dt TWIPING 1
 .Os
 .Sh NAME
@@ -87,6 +87,8 @@ The default timeout is 30 seconds.
 exits zero normally, 1 an error occurs, or 2 if no reponse is received within the specified timeout.
 .Pp
 Errors returned from the Twilio REST API are reported to standard error.
+.Sh BUGS
+The Twilio API is unable to communicate with other short codes, whether managed by Twilio or not.
 .Sh SEE ALSO
 .Xr curl 1 ,
 .Xr smslen 1 ,
