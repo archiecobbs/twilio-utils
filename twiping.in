@@ -9,6 +9,7 @@ BASE_URL='https://api.twilio.com/'
 ACCOUNTS_PATH='/2010-04-01/Accounts/${ACCOUNT_SID}/Messages'
 RESULT_XSL='@pkgdatadir@/result.xsl'
 TWIPING_XSL='@pkgdatadir@/twiping.xsl'
+FORMAT_STRING="TEST%s"
 SLEEP_INTERVAL='3'
 CURL="@CURL@"
 SED="@SED@"
@@ -25,11 +26,13 @@ PAGE_SIZE="500"
 # Usage message
 usage()
 {
-    echo "Usage: twiping [-c config.txt] [-C curlflag] [-F from-number] [-t testcode] [-w timeout] number" 1>&2
+    echo "Usage: twiping [-c config.txt] [-C curlflag] [-F from-number] [-f format-string] [-t testcode]" 1>&2
+    echo "               [-w timeout] dest-number" 1>&2
     echo "Options:" 1>&2
     echo "    -C    Pass curlflag to curl(1)" 1>&2
     echo "    -c    Specify config file (default \"${DEFAULT_CONFIG_FILE}\")" 1>&2
     echo "    -F    Specify sending phone number (10 digits)" 1>&2
+    echo "    -f    Specify alternate printf(1) format string (default \"${FORMAT_STRING}\")" 1>&2
     echo "    -t    Assume outgoing SMS message with \`testcode' has already been sent" 1>&2
     echo "    -w    Specify response timeout in seconds (default ${MAX_WAIT_TIME})" 1>&2
 }
@@ -63,6 +66,11 @@ while [ ${#} -gt 0 ]; do
         -F)
             shift
             FROM_NUMBER="${1}"
+            shift
+            ;;
+        -f)
+            shift
+            FORMAT_STRING="${1}"
             shift
             ;;
         -t)
@@ -150,10 +158,10 @@ trap "rm -f ${RESPONSE_FILE} ${ERROR_FILE}" 0 2 3 5 10 13 15
 if [ -z "${TESTCODE}" ]; then
 
     # Generate random test string
-    TESTCODE="TEST`${HEXDUMP} -n 4 -v -e '1/1 "%02x"' /dev/urandom`"
+    TESTCODE="`${HEXDUMP} -n 4 -v -e '1/1 "%02x"' /dev/urandom`"
 
     # Send test code to Twilio
-    echo "${TESTCODE}" \
+    printf "${FORMAT_STRING}" "${TESTCODE}" \
       | "${CURL}" --silent \
       --user "${ACCOUNT_SID}:${AUTH_TOKEN}" \
       --data "From=${FROM_NUMBER}" \
@@ -237,4 +245,3 @@ while true; do
     # Pause and try again
     "${SLEEP}" "${SLEEP_INTERVAL}"
 done
-

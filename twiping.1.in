@@ -26,6 +26,7 @@
 .Op Fl c Ar file
 .Op Fl C Ar flag
 .Op Fl F Ar number
+.Op Fl f Ar format
 .Op Fl t Ar testcode
 .Op Fl w Ar timeout
 .Ar number
@@ -40,6 +41,9 @@ and then waits for an SMS response containing the same test code, using the Twil
 The test message has the form
 .Ar TESTxxxxxxxx
 where the `x' characters are replaced by random hex digits.
+Only the hex digits (the
+.Ar xxxxxxxx
+part) are matched in the reply.
 .Pp
 .Sh OPTIONS
 .Bl -tag -width Ds
@@ -67,6 +71,11 @@ Pass
 .Ar flag
 to
 .Xr curl 1 .
+.It Fl f
+Specify an alternate
+.Xr printf 1
+format string; the default is
+.Ar "TEST%s"
 .It Fl F
 Specify the sending SMS phone number.
 This flag is required if the configuration file does not define a default
