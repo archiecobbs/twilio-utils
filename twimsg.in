@@ -5,7 +5,7 @@ set -e
 
 # Constants
 DEFAULT_CONFIG_FILE='@defaultconf@'
-DEFAULT_TRUNCATE_LIMIT='140'
+DEFAULT_TRUNCATE_LIMIT='3200'
 BASE_URL='https://api.twilio.com/'
 ACCOUNTS_PATH='/2010-04-01/Accounts/${ACCOUNT_SID}/Messages'
 RESULT_XSL='@pkgdatadir@/result.xsl'

@@ -48,7 +48,7 @@ or as a 5 or 6 digit short code.
 .Pp
 The input is automatically truncated at the point at which it would exceed
 .Ar limit
-encoded bytes (default 140).
+encoded bytes (default 3200).
 .Sh OPTIONS
 .Bl -tag -width Ds
 .It Fl c
@@ -94,12 +94,15 @@ This flag may be repeated to send multiple images.
 Truncate the message when it would exceed
 .Ar limit
 bytes.
-The default is 140, which keeps it within a single SMS message.
 .Pp
-Note Twilio supports automatic outgoing message concatenation;
-to take advantage of this feature, use
-.Fl t Ar 3200
-instead.
+Because Twilio supports automatic outgoing message concatenation, the default for
+.Ar limit
+is
+.Ar 3200 .
+However, not all carriers support message concatenation.
+Specify a value of
+.Fl t Ar 140
+to ensure the message fits within a single SMS message chunk.
 .El
 .Sh EXIT STATUS
 .Nm
