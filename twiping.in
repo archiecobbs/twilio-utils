@@ -84,6 +84,7 @@ while [ ${#} -gt 0 ]; do
             ;;
         -P)
             read -s -p 'Auth Token: ' OVERRIDE_AUTH_TOKEN
+            echo
             shift
             ;;
         -t)
@@ -234,7 +235,7 @@ while true; do
     CURRENT_TIME=`"${DATE}" -u +%s`
     ELAPSED_TIME=`"${EXPR}" "${CURRENT_TIME}" - "${START_TIME}" || true`
     if [ "${ELAPSED_TIME}" -ge "${MAX_WAIT_TIME}" ]; then
-        echo "smsping: no response after ${ELAPSED_TIME} seconds" 1>&2
+        echo "twiping: no response after ${ELAPSED_TIME} seconds" 1>&2
         exit 2
     fi
 
@@ -249,7 +250,7 @@ while true; do
     # Check result
     CURL_RESULT="$?"
     if [ "${CURL_RESULT}" -ne 0 ]; then
-        echo "smsping: error retrieving messages (curl returned ${CURL_RESULT})" 1>&2
+        echo "twiping: error retrieving messages (curl returned ${CURL_RESULT})" 1>&2
         exit 1
     fi
 
