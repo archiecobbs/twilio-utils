@@ -2,7 +2,7 @@
 .\" 
 .\" twilio-utils - Command line utilities for Twilio users
 .\" 
-.\" Copyright 2013 Archie L. Cobbs <archie@dellroad.org>
+.\" Copyright 2013 Archie L. Cobbs <archie.cobbs@gmail.com>
 .\" 
 .\" Licensed under the Apache License, Version 2.0 (the "License"); you may
 .\" not use this file except in compliance with the License. You may obtain
@@ -101,4 +101,4 @@ Possible errors include an invalid byte sequence in the input.
 .%O http://en.wikipedia.org/wiki/GSM_03.38
 .Re
 .Sh AUTHOR
-.An Archie L. Cobbs Aq archie@dellroad.org
+.An Archie L. Cobbs Aq archie.cobbs@gmail.com
