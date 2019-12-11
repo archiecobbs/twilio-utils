@@ -29,8 +29,10 @@ usage()
     echo "    -m url            Include the image at the specified URL via MMS (may be repeated)" 1>&2
     echo "    -P                Ask for auth token from the terminal" 1>&2
     echo "    -p auth-token     Specify auth token (default read AUTH_TOKEN from config file)" 1>&2
+    echo "    -S                Output message ID returned from Twilio to standard output" 1>&2
     echo "    -t limit          Truncate input after limit bytes (default ${DEFAULT_TRUNCATE_LIMIT})" 1>&2
     echo "    -u account-sid    Specify Account SID (default read ACCOUNT_SID from config file)" 1>&2
+    echo "    -v                Enable verbose output" 1>&2
 }
 
 # Function to normalize a phone number to the way Twilio likes it
@@ -50,6 +52,8 @@ OVERRIDE_ACCOUNT_SID=""
 OVERRIDE_AUTH_TOKEN=""
 INPUT_FILE="-"
 CURL_FLAGS=""
+OUTPUT_ID="false"
+VERBOSE="false"
 while [ ${#} -gt 0 ]; do
     case "$1" in
         -c)
@@ -97,6 +101,10 @@ while [ ${#} -gt 0 ]; do
             echo
             shift
             ;;
+        -S)
+            OUTPUT_ID="true"
+            shift
+            ;;
         -t)
             shift
             TRUNCATE_LIMIT="${1}"
@@ -105,6 +113,10 @@ while [ ${#} -gt 0 ]; do
         -u)
             shift
             OVERRIDE_ACCOUNT_SID="${1}"
+            shift
+            ;;
+        -v)
+            VERBOSE="true"
             shift
             ;;
         -h|--help)
@@ -183,15 +195,16 @@ if [ $? -ne 0 ]; then
     echo "twimsg: can't create temporary file" 1>&2
     exit 1
 fi
-ERROR_FILE=`mktemp -q /tmp/twimsg.XXXXXX`
+OUTPUT_FILE=`mktemp -q /tmp/twimsg.XXXXXX`
 if [ $? -ne 0 ]; then
     rm -f ${RESPONSE_FILE}
     echo "twimsg: can't create temporary file" 1>&2
     exit 1
 fi
-trap "rm -f ${RESPONSE_FILE} ${ERROR_FILE}" 0 2 3 5 10 13 15
+trap "rm -f ${RESPONSE_FILE} ${OUTPUT_FILE}" 0 2 3 5 10 13 15
 
 # Truncate input and post to Twilio
+[ "${VERBOSE}" != 'true' ] || echo "twimsg: posting data to ${URL}" 1>&2
 cat "${INPUT_FILE}" \
   | "${ICONV}" -c -s -f "${ENCODING}" -t "${TWILIO_ENCODING}" \
   | "${SMSLEN}" -i "${TWILIO_ENCODING}" -t "${TRUNCATE_LIMIT}" \
@@ -210,20 +223,33 @@ if [ "${CURL_RESULT}" -ne 0 ]; then
     echo "twimsg: error sending request (curl returned ${CURL_RESULT})" 1>&2
     exit 1
 fi
-
-# Apply XSLT to returned XML to get error message
-"${XSLTPROC}" "${RESULT_XSL}" "${RESPONSE_FILE}" > "${ERROR_FILE}" 2>&1
-if [ $? -ne 0 ]; then
-    echo -n "twimsg: error parsing result:" 1>&2
-    cat "${ERROR_FILE}" 1>&2
-    exit 1
+if [ "${VERBOSE}" = 'true' ]; then
+    echo "twimsg: received response:" 1>&2
+    cat "${RESPONSE_FILE}" 1>&2
+    echo 1>&2
 fi
 
-# Was there an error returned?
-if [ -s "${ERROR_FILE}" ]; then
-    echo -n "twimsg: " 1>&2
-    cat "${ERROR_FILE}" 1>&2
+# Apply XSLT to returned XML to get error message
+"${XSLTPROC}" "${RESULT_XSL}" "${RESPONSE_FILE}" > "${OUTPUT_FILE}" 2>&1
+if [ $? -ne 0 ]; then
+    echo -n "twimsg: error parsing result:" 1>&2
+    cat "${OUTPUT_FILE}" 1>&2
     exit 1
+fi
+if [ "${VERBOSE}" = 'true' ]; then
+    echo "twimsg: successfully parsed response:" 1>&2
+    cat "${OUTPUT_FILE}" 1>&2
+fi
+
+# Get SMS ID or error response from output file
+SMS_ID=`cat "${OUTPUT_FILE}"`
+if ! [[ "${SMS_ID}" =~ ^SM[0-9a-f]{32}$ ]]; then
+    echo -n "twimsg: " 1>&2
+    cat "${OUTPUT_FILE}" 1>&2
+    exit 1
+fi
+if [ "${OUTPUT_ID}" = 'true' ]; then
+    echo "${SMS_ID}"
 fi
 
 # Done

@@ -33,6 +33,8 @@
 .Op Fl u Ar account-sid
 .Op Fl p Ar auth-token
 .Op Fl P
+.Op Fl S
+.Op Fl v
 .Ar dest-number
 .Ek
 .Sh DESCRIPTION
@@ -112,10 +114,17 @@ However, not all carriers support message concatenation.
 Specify a value of
 .Fl t Ar 140
 to ensure the message fits within a single SMS message chunk.
+.It Fl S
+If successful, print the SMS message ID, which has the form
+.Pa SM0123456789abcdef0123456789abcdef ,
+to standard output.
 .It Fl u
 Specify Account SID, overriding
 .Pa ACCOUNT_SID
 from the configuration file, if any.
+.It Fl v
+Verbose mode.
+Shows more information about what's happening.
 .El
 .Sh EXIT STATUS
 .Nm

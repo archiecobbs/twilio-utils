@@ -9,7 +9,9 @@
             <xsl:when test="TwilioResponse/RestException">
                 <xsl:apply-templates select="TwilioResponse/RestException"/>
             </xsl:when>
-            <xsl:when test="TwilioResponse/Message"/>
+            <xsl:when test="TwilioResponse/Message">
+                <xsl:value-of select="concat(TwilioResponse/Message/Sid, '&#10;')"/>
+            </xsl:when>
             <xsl:otherwise>
                 <xsl:text>Invalid XML response received&#10;</xsl:text>
             </xsl:otherwise>
