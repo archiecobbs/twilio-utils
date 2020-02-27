@@ -30,6 +30,7 @@
 .Op Fl \-minDate Ar date
 .Op Fl \-maxDate Ar date
 .Op Fl \-limit Ar num
+.Op Fl \-pageSize Ar size
 .Op Fl \-raw
 .Op Fl u Ar account-sid
 .Op Fl p Ar auth-token
@@ -83,6 +84,9 @@ Specify authentication token, overriding
 from the configuration file, if any.
 .It Fl P
 Read authentication token from the terminal.
+.It Fl \-pageSize
+Specify the query page size.
+Default is 1000.
 .It Fl \-raw
 Output the raw XML from each page of results, instead of just the message SID's.
 .It Fl u
