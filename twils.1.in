@@ -1,0 +1,105 @@
+.\"  -*- nroff -*-
+.\"
+.\" twilio-utils - Command line utilities for Twilio users
+.\"
+.\" Copyright 2013 Archie L. Cobbs <archie.cobbs@gmail.com>
+.\"
+.\" Licensed under the Apache License, Version 2.0 (the "License"); you may
+.\" not use this file except in compliance with the License. You may obtain
+.\" a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+.\"
+.\" Unless required by applicable law or agreed to in writing, software
+.\" distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+.\" WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+.\" License for the specific language governing permissions and limitations
+.\" under the License.
+.\"
+.Dd Feb 27, 2020
+.Dt TWILS 1
+.Os
+.Sh NAME
+.Nm twils
+.Nd List Twilio SMS message resources
+.Sh SYNOPSIS
+.Nm twils
+.Bk -words
+.Op Fl c Ar config-file
+.Op Fl C Ar curl-flag
+.Op Fl \-from Ar number
+.Op Fl \-to Ar number
+.Op Fl \-minDate Ar date
+.Op Fl \-maxDate Ar date
+.Op Fl \-limit Ar num
+.Op Fl \-raw
+.Op Fl u Ar account-sid
+.Op Fl p Ar auth-token
+.Op Fl P
+.Ek
+.Sh DESCRIPTION
+.Nm
+retrieves
+.Pa Message
+resources from the Twilio REST API and prints their message SID's to standard output.
+.Pp
+Messages are returned in reverse chronological order.
+.Sh OPTIONS
+.Bl -tag -width Ds
+.It Fl c
+Specify the configuration file.
+.Pp
+This file is simply a shell script that when sourced must define the
+.Pa ACCOUNT_SID
+and
+.Pa AUTH_TOKEN
+shell variables containing the corresponding Twilio credentials.
+.Pp
+If the
+.Fl c
+flag is not specified,
+.Pa @defaultconf@
+is assumed.
+.It Fl C
+Pass
+.Ar curlflag
+to
+.Xr curl 1 .
+.It Fl \-from
+Restrict to messages sent from the specified phone number (must be in E.164 format) or 5 or 6 digit short code.
+.It Fl \-to
+Restrict to messages sent to the specified phone number (must be in E.164 format) or 5 or 6 digit short code.
+.It Fl \-minDate
+Restrict to messages sent on or after the specified date, which must be in the form
+.PA YYY-MM-DD .
+.It Fl \-maxDate
+Restrict to messages sent on or before the specified date, which must be in the form
+.PA YYY-MM-DD .
+.It Fl \-limit
+Return at most
+.Ar num
+results.
+.It Fl p
+Specify authentication token, overriding
+.Pa AUTH_TOKEN
+from the configuration file, if any.
+.It Fl P
+Read authentication token from the terminal.
+.It Fl \-raw
+Output the raw XML from each page of results, instead of just the message SID's.
+.It Fl u
+Specify Account SID, overriding
+.Pa ACCOUNT_SID
+from the configuration file, if any.
+.El
+.Sh EXIT STATUS
+.Nm
+exits zero normally, or 1 if an error occurs.
+.Pp
+Errors returned from the Twilio REST API are reported to standard error.
+.Sh SEE ALSO
+.Xr curl 1 ,
+.Xr smslen 1 ,
+.Xr twirm 1 ,
+.Xr twiping 1 ,
+.Xr twilog 1 .
+.Sh AUTHOR
+.An Archie L. Cobbs Aq archie.cobbs@gmail.com

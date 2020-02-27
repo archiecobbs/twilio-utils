@@ -1,6 +1,7 @@
 Version Next
 
     - Added "-S" and "-v" command line flags to twimsg(1)
+    - Added twils(1) and twirm(1) utilities
 
 Version 1.1.0 Release October 2, 2019
 

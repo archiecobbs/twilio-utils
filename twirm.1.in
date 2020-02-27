@@ -14,36 +14,27 @@
 .\" License for the specific language governing permissions and limitations
 .\" under the License.
 .\"
-.Dd May 17, 2013
-.Dt TWILOG 1
+.Dd Feb 27, 2020
+.Dt TWIRM 1
 .Os
 .Sh NAME
-.Nm twilog
-.Nd Download Twilio notifications and log them to syslog
+.Nm twirm
+.Nd Delete Twilio SMS message resources
 .Sh SYNOPSIS
-.Nm twilog
+.Nm twirm
 .Bk -words
-.Op Fl d
-.Op Fl i
-.Op Fl m
-.Op Fl c Ar config
-.Op Fl f Ar facility
-.Op Fl t Ar tag
-.Op Fl s Ar statefile
+.Op Fl c Ar config-file
+.Op Fl C Ar curl-flag
+.Op Fl u Ar account-sid
+.Op Fl p Ar auth-token
+.Op Fl P
+.Ar sid ...
 .Ek
 .Sh DESCRIPTION
 .Nm
-downloads Twilio notifications using the Twilio REST API and logs them to syslog.
-.Pp
-.Nm
-keeps track of notifications already downloaded between invocations, so that
-only new notifications will be logged.
-.Pp
-Normally
-.Nm
-would be invoked from a
-.Xr cron 8
-script.
+deletes SMS
+.Pa Message
+resources from Twilio's internal logs.
 .Sh OPTIONS
 .Bl -tag -width Ds
 .It Fl c
@@ -55,45 +46,37 @@ and
 .Pa AUTH_TOKEN
 shell variables containing the corresponding Twilio credentials.
 .Pp
-If not specified,
+If the
+.Fl c
+flag is not specified,
 .Pa @defaultconf@
 is assumed.
-.It Fl d
-Run in debug mode: instead of logging notifications to syslog,
-print them to standard output.
-.It Fl f
-Specify the syslog facility.
-The default is
-.Pa user .
-.It Fl i
-Include the Notification's SID in the message.
-.It Fl m
-Include the notification's original timestamp in the message.
-.It Fl t
-Specify the syslog tag.
-The default is
-.Pa twilog .
-.It Fl s
-Specify the state file used to maintain state between invocations.
-The default is
-.Pa "/var/lib/twilog/state.${ACCOUNT_SID}" .
+.It Fl C
+Pass
+.Ar curlflag
+to
+.Xr curl 1 .
+.It Fl p
+Specify authentication token, overriding
+.Pa AUTH_TOKEN
+from the configuration file, if any.
+.It Fl P
+Read authentication token from the terminal.
+.It Fl u
+Specify Account SID, overriding
+.Pa ACCOUNT_SID
+from the configuration file, if any.
 .El
 .Sh EXIT STATUS
 .Nm
 exits zero normally, or 1 if an error occurs.
 .Pp
 Errors returned from the Twilio REST API are reported to standard error.
-.Sh BUGS
-If more than 1000 notifications have been created since the last time
-.Nm
-was run, only the most recent 1000 will be logged.
 .Sh SEE ALSO
-.Xr cron 8 ,
-.Xr logger 1 ,
-.Xr twimsg 1 ,
+.Xr curl 1 ,
+.Xr smslen 1 ,
 .Xr twils 1 ,
-.Xr twirm 1 ,
 .Xr twiping 1 ,
-.Xr smslen 1 .
+.Xr twilog 1 .
 .Sh AUTHOR
 .An Archie L. Cobbs Aq archie.cobbs@gmail.com

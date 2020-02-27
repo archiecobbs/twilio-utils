@@ -90,6 +90,8 @@ exits zero normally, or 1 if an error occurs.
 Possible errors include an invalid byte sequence in the input.
 .Sh SEE ALSO
 .Xr twimsg 1 ,
+.Xr twils 1 ,
+.Xr twirm 1 ,
 .Xr twiping 1 ,
 .Xr twilog 1 .
 .Rs

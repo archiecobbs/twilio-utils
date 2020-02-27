@@ -136,6 +136,8 @@ The Twilio API is unable to communicate with other short codes, whether managed 
 .Sh SEE ALSO
 .Xr curl 1 ,
 .Xr smslen 1 ,
+.Xr twils 1 ,
+.Xr twirm 1 ,
 .Xr twiping 1 ,
 .Xr twilog 1 .
 .Sh AUTHOR

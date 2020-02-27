@@ -1,0 +1,154 @@
+#!/bin/bash
+
+# Bail on error
+set -e
+
+# Constants
+NAME="twirm"
+DEFAULT_CONFIG_FILE='@defaultconf@'
+BASE_URL='https://api.twilio.com/'
+MESSAGE_PATH='/2010-04-01/Accounts/${ACCOUNT_SID}/Messages/${MESSAGE_SID}'
+RESULT_XSL='@pkgdatadir@/result.xsl'
+CURL="@CURL@"
+ICONV="@ICONV@"
+XSLTPROC="@XSLTPROC@"
+
+# Usage message
+usage()
+{
+    echo "Usage: ${NAME} [options] SID..." 1>&2
+    echo "Options:" 1>&2
+    echo "    -C curlflag       Pass curlflag to curl(1)" 1>&2
+    echo "    -c file           Specify config file (default \"${DEFAULT_CONFIG_FILE}\")" 1>&2
+    echo "    -P                Ask for auth token from the terminal" 1>&2
+    echo "    -p auth-token     Specify auth token (default read AUTH_TOKEN from config file)" 1>&2
+    echo "    -u account-sid    Specify Account SID (default read ACCOUNT_SID from config file)" 1>&2
+}
+
+# Parse flags passed in on the command line
+CONFIG_FILE="${DEFAULT_CONFIG_FILE}"
+OVERRIDE_ACCOUNT_SID=""
+OVERRIDE_AUTH_TOKEN=""
+CURL_FLAGS=""
+while [ ${#} -gt 0 ]; do
+    case "$1" in
+        -c)
+            shift
+            CONFIG_FILE="${1}"
+            shift
+            ;;
+        -C)
+            shift
+            CURL_FLAGS="${CURL_FLAGS} ${1}"
+            shift
+            ;;
+        -p)
+            shift
+            OVERRIDE_AUTH_TOKEN="${1}"
+            shift
+            ;;
+        -P)
+            read -s -p 'Auth Token: ' OVERRIDE_AUTH_TOKEN
+            echo
+            shift
+            ;;
+        -u)
+            shift
+            OVERRIDE_ACCOUNT_SID="${1}"
+            shift
+            ;;
+        -h|--help)
+            usage
+            exit
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+# Ensure config file is readable; if not, then what we need must be provided on the command line
+if ! test -r "${CONFIG_FILE}"; then
+    if test -z "${OVERRIDE_FROM_NUMBER}" -o -z "${OVERRIDE_ACCOUNT_SID}" -o -z "${OVERRIDE_AUTH_TOKEN}"; then
+        echo "${NAME}: can't read ${CONFIG_FILE}" 1>&2
+        exit 1
+    fi
+else
+    # Parse config file
+    . "${CONFIG_FILE}"
+fi
+
+# Override some config with command line flags
+if [ -n "${OVERRIDE_ACCOUNT_SID}" ]; then
+    ACCOUNT_SID="${OVERRIDE_ACCOUNT_SID}"
+fi
+if [ -n "${OVERRIDE_AUTH_TOKEN}" ]; then
+    AUTH_TOKEN="${OVERRIDE_AUTH_TOKEN}"
+fi
+
+# Sanity check stuff
+if ! [[ "${MESSAGE_SID}" =~ ^SM[0-9a-f]{32}$ ]]; then
+    echo "${NAME}: invalid message SID \"${MESSAGE_SID}\"" 1>&2
+    exit 1
+fi
+if ! [[ "${ACCOUNT_SID}" =~ ^AC[0-9a-f]{32}$ ]]; then
+    echo "${NAME}: invalid account SID \"${ACCOUNT_SID}\"" 1>&2
+    exit 1
+fi
+if ! [[ "${AUTH_TOKEN}" =~ ^[0-9a-f]{32}$ ]]; then
+    echo "${NAME}: invalid authentication token" 1>&2
+    exit 1
+fi
+
+# Delete resources
+for MESSAGE_SID in "$@"; do
+
+    # Build URL
+    URL="`echo ${BASE_URL} | sed 's|/$||g'`""`eval echo ${MESSAGE_PATH}`"
+
+    # Create temporary files for message response and error
+    RESPONSE_FILE=`mktemp -q /tmp/${NAME}.XXXXXX`
+    if [ $? -ne 0 ]; then
+        echo "${NAME}: can't create temporary file" 1>&2
+        exit 1
+    fi
+    ERROR_FILE=`mktemp -q /tmp/${NAME}.XXXXXX`
+    if [ $? -ne 0 ]; then
+        rm -f ${RESPONSE_FILE}
+        echo "${NAME}: can't create temporary file" 1>&2
+        exit 1
+    fi
+    trap "rm -f ${RESPONSE_FILE} ${ERROR_FILE}" 0 2 3 5 10 13 15
+
+    # Delete resource
+    "${CURL}" --silent \
+      --request DELETE \
+      --user "${ACCOUNT_SID}:${AUTH_TOKEN}" \
+      --output "${RESPONSE_FILE}" \
+      ${CURL_FLAGS} \
+      "${URL}"
+
+    # Check result
+    CURL_RESULT="$?"
+    if [ "${CURL_RESULT}" -ne 0 ]; then
+        echo "${NAME}: error sending request (curl returned ${CURL_RESULT})" 1>&2
+        exit 1
+    fi
+
+    # Apply XSLT to returned XML (if any) to get error message
+    if [ -s "${ERROR_FILE}" ]; then
+        "${XSLTPROC}" "${RESULT_XSL}" "${RESPONSE_FILE}" > "${ERROR_FILE}" 2>&1
+        if [ $? -ne 0 ]; then
+            echo -n "${NAME}: error parsing result:" 1>&2
+            cat "${ERROR_FILE}" 1>&2
+            exit 1
+        fi
+    fi
+done
+
+# Done
+exit 0

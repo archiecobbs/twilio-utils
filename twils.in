@@ -1,0 +1,310 @@
+#!/bin/bash
+
+# Bail on error
+set -e
+
+# Constants
+NAME="twils"
+DEFAULT_CONFIG_FILE='@defaultconf@'
+BASE_URL='https://api.twilio.com/'
+MESSAGES_PATH='/2010-04-01/Accounts/${ACCOUNT_SID}/Messages'
+RESULT_XSL='@pkgdatadir@/result.xsl'
+CURL="@CURL@"
+ICONV="@ICONV@"
+XSLTPROC="@XSLTPROC@"
+PAGE_SIZE="1000"
+
+# Usage message
+usage()
+{
+    echo "This command outputs the SID's of all matching SMS messages." 1>&2
+    echo "Usage: ${NAME} [options]" 1>&2
+    echo "Options:" 1>&2
+    echo "    -C curlflag       Pass curlflag to curl(1)" 1>&2
+    echo "    -c file           Specify config file (default \"${DEFAULT_CONFIG_FILE}\")" 1>&2
+    echo "    --from number     Specify message originating number (in E.164 format)" 1>&2
+    echo "    --to number       Specify message receiving number (in E.164 format)" 1>&2
+    echo "    --minDate date    Specify minimum message date (in the form YYYY-MM-DD)" 1>&2
+    echo "    --maxDate date    Specify maximum message date (in the form YYYY-MM-DD)" 1>&2
+    echo "    --limit num       Specify the maximum number of results to return (default no limit)" 1>&2
+    echo "    --raw             Instead of SID's, output the raw <Messages> XML from each result page" 1>&2
+    echo "    -P                Ask for auth token from the terminal" 1>&2
+    echo "    -p auth-token     Specify auth token (default read AUTH_TOKEN from config file)" 1>&2
+    echo "    -u account-sid    Specify Account SID (default read ACCOUNT_SID from config file)" 1>&2
+}
+
+# Function to normalize a phone number to the way Twilio likes it
+normalize()
+{
+    echo ${1+"$@"} | sed -r \
+      -e 's/[^0-9]//g' \
+      -e 's/^1?([0-9]{10})$/+1\1/g'
+}
+
+# Parse flags passed in on the command line
+CONFIG_FILE="${DEFAULT_CONFIG_FILE}"
+FROM_NUMBER=""
+TO_NUMBER=""
+MIN_DATE=""
+MAX_DATE=""
+OVERRIDE_ACCOUNT_SID=""
+OVERRIDE_AUTH_TOKEN=""
+CURL_FLAGS=""
+LIMIT=""
+RAW="false"
+while [ ${#} -gt 0 ]; do
+    case "$1" in
+        -c)
+            shift
+            CONFIG_FILE="${1}"
+            shift
+            ;;
+        -C)
+            shift
+            CURL_FLAGS="${CURL_FLAGS} ${1}"
+            shift
+            ;;
+        --from)
+            shift
+            FROM_NUMBER="${1}"
+            shift
+            ;;
+        --to)
+            shift
+            TO_NUMBER="${1}"
+            shift
+            ;;
+        --limit)
+            shift
+            LIMIT="${1}"
+            shift
+            ;;
+        --minDate)
+            shift
+            MIN_DATE="${1}"
+            shift
+            ;;
+        --maxDate)
+            shift
+            MAX_DATE="${1}"
+            shift
+            ;;
+        -p)
+            shift
+            OVERRIDE_AUTH_TOKEN="${1}"
+            shift
+            ;;
+        -P)
+            read -s -p 'Auth Token: ' OVERRIDE_AUTH_TOKEN
+            echo
+            shift
+            ;;
+        --raw)
+            shift
+            RAW="true"
+            ;;
+        -u)
+            shift
+            OVERRIDE_ACCOUNT_SID="${1}"
+            shift
+            ;;
+        -h|--help)
+            usage
+            exit
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+case "${#}" in
+    0)
+        ;;
+    *)
+        usage
+        exit 1
+        ;;
+esac
+
+# Ensure config file is readable; if not, then what we need must be provided on the command line
+if ! test -r "${CONFIG_FILE}"; then
+    if test -z "${OVERRIDE_FROM_NUMBER}" -o -z "${OVERRIDE_ACCOUNT_SID}" -o -z "${OVERRIDE_AUTH_TOKEN}"; then
+        echo "${NAME}: can't read ${CONFIG_FILE}" 1>&2
+        exit 1
+    fi
+else
+    # Parse config file
+    . "${CONFIG_FILE}"
+fi
+
+# Override some config with command line flags
+if [ -n "${OVERRIDE_ACCOUNT_SID}" ]; then
+    ACCOUNT_SID="${OVERRIDE_ACCOUNT_SID}"
+fi
+if [ -n "${OVERRIDE_AUTH_TOKEN}" ]; then
+    AUTH_TOKEN="${OVERRIDE_AUTH_TOKEN}"
+fi
+
+# Normalize numbers
+FROM_NUMBER=`normalize "${FROM_NUMBER}"`
+TO_NUMBER=`normalize "${TO_NUMBER}"`
+
+# Sanity check stuff
+if [ -n "${MIN_DATE}" ] && ! [[ "${MIN_DATE}" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+    echo "${NAME}: invalid minimum date \"${MIN_DATE}\"" 1>&2
+    exit 1
+fi
+if [ -n "${MAX_DATE}" ] && ! [[ "${MAX_DATE}" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+    echo "${NAME}: invalid maximum date \"${MAX_DATE}\"" 1>&2
+    exit 1
+fi
+if [ -n "${FROM_NUMBER}" ] && ! [[ "${FROM_NUMBER}" =~ ^(\+1[2-9][0-9]{2}[2-9][0-9]{2}[0-9]{4}|[0-9]{5,6})$ ]]; then
+    echo "${NAME}: invalid originating phone number \"${FROM_NUMBER}\"" 1>&2
+    exit 1
+fi
+if [ -n "${TO_NUMBER}" ] && ! [[ "${TO_NUMBER}" =~ ^(\+1[2-9][0-9]{2}[2-9][0-9]{2}[0-9]{4}|[0-9]{5,6})$ ]]; then
+    echo "${NAME}: invalid receiving phone number \"${TO_NUMBER}\"" 1>&2
+    exit 1
+fi
+if [ -n "${LIMIT}" ] && ! [[ "${LIMIT}" =~ ^[0-9]+$ ]]; then
+    echo "${NAME}: invalid limit \"${LIMIT}\"" 1>&2
+    exit 1
+fi
+if ! [[ "${ACCOUNT_SID}" =~ ^AC[0-9a-f]{32}$ ]]; then
+    echo "${NAME}: invalid account SID \"${ACCOUNT_SID}\"" 1>&2
+    exit 1
+fi
+if ! [[ "${AUTH_TOKEN}" =~ ^[0-9a-f]{32}$ ]]; then
+    echo "${NAME}: invalid authentication token" 1>&2
+    exit 1
+fi
+
+# Create temporary files for message response and error
+RESPONSE_FILE=`mktemp -q /tmp/${NAME}.XXXXXX`
+if [ $? -ne 0 ]; then
+    echo "${NAME}: can't create temporary file" 1>&2
+    exit 1
+fi
+ERROR_FILE=`mktemp -q /tmp/${NAME}.XXXXXX`
+if [ $? -ne 0 ]; then
+    rm -f ${RESPONSE_FILE}
+    echo "${NAME}: can't create temporary file" 1>&2
+    exit 1
+fi
+trap "rm -f ${RESPONSE_FILE} ${ERROR_FILE}" 0 2 3 5 10 13 15
+
+# Build initial URL
+URL="`echo ${BASE_URL} | sed 's|/$||g'`""`eval echo ${MESSAGES_PATH}`"
+PARAMS="PageSize=${PAGE_SIZE}"
+if [ -n "${FROM_NUMBER}" ]; then
+    PARAMS="${PARAMS}&From=${FROM_NUMBER}"
+fi
+if [ -n "${TO_NUMBER}" ]; then
+    PARAMS="${PARAMS}&From=${TO_NUMBER}"
+fi
+if [ -n "${MIN_DATE}" ]; then
+    PARAMS="${PARAMS}&DateSent%3E=${MIN_DATE}"
+fi
+if [ -n "${MAX_DATE}" ]; then
+    PARAMS="${PARAMS}&DateSent%3C=${MAX_DATE}"
+fi
+URL="${URL}?${PARAMS}"
+
+# Read pages of results
+while true; do
+
+    # Read next page of results
+    "${CURL}" --silent \
+      --user "${ACCOUNT_SID}:${AUTH_TOKEN}" \
+      --output "${RESPONSE_FILE}" \
+      ${CURL_FLAGS} \
+      "${URL}"
+
+    # Check result
+    CURL_RESULT="$?"
+    if [ "${CURL_RESULT}" -ne 0 ]; then
+        echo "${NAME}: error sending request (curl returned ${CURL_RESULT})" 1>&2
+        exit 1
+    fi
+
+    # Apply XSLT to returned XML to get error message
+    "${XSLTPROC}" "${RESULT_XSL}" "${RESPONSE_FILE}" > "${ERROR_FILE}" 2>&1
+    if [ $? -ne 0 ]; then
+        echo -n "${NAME}: error parsing result:" 1>&2
+        cat "${ERROR_FILE}" 1>&2
+        exit 1
+    fi
+
+    # Was there an error returned?
+    if [ -s "${ERROR_FILE}" ]; then
+        echo -n "${NAME}: " 1>&2
+        cat "${ERROR_FILE}" 1>&2
+        exit 1
+    fi
+
+    # Count the number of messages on this page (if needed)
+    if [ -n "${LIMIT}" ]; then
+        "${XSLTPROC}" --stringparam lsop count "${RESULT_XSL}" "${RESPONSE_FILE}" > "${ERROR_FILE}" 2>&1
+        if [ $? -ne 0 ]; then
+            echo -n "${NAME}: error parsing result:" 1>&2
+            cat "${ERROR_FILE}" 1>&2
+            exit 1
+        fi
+        COUNT="`cat ${ERROR_FILE}`"
+    fi
+
+    # Output this page of results
+    if [ "${RAW}" != 'true' ]; then
+
+        # Output SID's
+        "${XSLTPROC}" --stringparam lsop sids "${RESULT_XSL}" "${RESPONSE_FILE}" > "${ERROR_FILE}" 2>&1
+        if [ $? -ne 0 ]; then
+            echo -n "${NAME}: error parsing result:" 1>&2
+            cat "${ERROR_FILE}" 1>&2
+            exit 1
+        fi
+
+        # Output partial page if limit applies
+        if [ -n "${LIMIT}" -a "${COUNT}" -gt "${LIMIT}" ]; then
+            cat "${ERROR_FILE}" | head -n "${LIMIT}"
+        else
+            cat "${ERROR_FILE}"
+        fi
+    else
+
+        # Output raw XML
+        cat "${ERROR_FILE}"
+    fi
+
+    # Update limit
+    if [ -n "${LIMIT}" ]; then
+        LIMIT=$(( ${LIMIT} - ${COUNT} ))
+        if [ "${LIMIT}" -le 0 ]; then
+            break
+        fi
+    fi
+
+    # Get next page URI
+    "${XSLTPROC}" --stringparam lsop next "${RESULT_XSL}" "${RESPONSE_FILE}" > "${ERROR_FILE}" 2>&1
+    if [ $? -ne 0 ]; then
+        echo -n "${NAME}: error parsing result:" 1>&2
+        cat "${ERROR_FILE}" 1>&2
+        exit 1
+    fi
+
+    # Is there a next page?
+    if ! [ -s "${ERROR_FILE}" ]; then
+        break
+    fi
+
+    # Update URL for next page
+    URL="`echo ${BASE_URL} | sed 's|/$||g'`""`cat ${ERROR_FILE}`"
+done
+
+# Done
+exit 0
+
