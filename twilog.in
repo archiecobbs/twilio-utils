@@ -1,13 +1,14 @@
 #!/bin/bash
 
 # Constants
+NAME="twilog"
 BASE_URL='https://api.twilio.com/'
 NOTIFICATIONS_PATH='/2010-04-01/Accounts/${ACCOUNT_SID}/Notifications?MessageDate\>=${START_DATE}\&PageSize=${PAGESIZE}'
 FACILITY_REGEX="^(auth|authpriv|cron|daemon|ftp|kern|lpr|mail|news|security|user|uucp|local[0-7])$"
 DEFAULT_FACILITY="user"
-DEFAULT_TAG="twilog"
+DEFAULT_TAG="${NAME}"
 INITIAL_START_DATE="2000-01-01"
-DEFAULT_STATEFILE='/var/lib/twilog/state.${ACCOUNT_SID}'
+DEFAULT_STATEFILE='/var/lib/${NAME}/state.${ACCOUNT_SID}'
 DEFAULT_CREDSFILE='@defaultconf@'
 PAGESIZE="1000"
 XMLSTARLET="@XMLSTARLET@"
@@ -21,7 +22,7 @@ DATE_PARSING_STYLE="@DATE_PARSING_STYLE@"
 # Usage message
 usage()
 {
-    echo "Usage: twilog [-d] [-i] [-m] [-c config] [-f facility] [-t tag] [-s statefile]" 1>&2
+    echo "Usage: ${NAME} [-d] [-i] [-m] [-c config] [-f facility] [-t tag] [-s statefile]" 1>&2
     echo "Options:" 1>&2
     echo "    -c    Specify credentials file (default \"${DEFAULT_CREDSFILE}\")" 1>&2
     echo "    -d    Debug mode: log to stdout instead of syslog" 1>&2
@@ -56,7 +57,7 @@ parse_date()
             "${DATE}" -j -f '%a, %d %b %Y %T %z' "${1}" "+${2}"
             ;;
         *)
-            echo "twilog: unknown date parsing style: ${DATE_PARSING_STYLE}" 1>&2
+            echo "${NAME}: unknown date parsing style: ${DATE_PARSING_STYLE}" 1>&2
             exit 1
             ;;
     esac
@@ -138,36 +139,36 @@ esac
 
 # See if credentials file is readable
 if ! test -r "${CREDSFILE}"; then
-    echo "twilog: can't read ${CREDSFILE}" 1>&2
+    echo "${NAME}: can't read ${CREDSFILE}" 1>&2
     exit 1
 fi
 
 # Parse credentials file
 . "${CREDSFILE}"
 if [ -z "${ACCOUNT_SID}" ]; then
-    echo "twilog: ACCOUNT_SID missing in ${CREDSFILE}" 1>&2
+    echo "${NAME}: ACCOUNT_SID missing in ${CREDSFILE}" 1>&2
     exit 1
 fi
 if [ -z "${AUTH_TOKEN}" ]; then
-    echo "twilog: AUTH_TOKEN missing in ${CREDSFILE}" 1>&2
+    echo "${NAME}: AUTH_TOKEN missing in ${CREDSFILE}" 1>&2
     exit 1
 fi
 
 # Create temporary files for response
-RESPONSE_FILE=`mktemp -q /tmp/twilog.XXXXXX`
+RESPONSE_FILE=`mktemp -q /tmp/${NAME}.XXXXXX`
 if [ $? -ne 0 ]; then
-    echo "twilog: can't create temporary file" 1>&2
+    echo "${NAME}: can't create temporary file" 1>&2
     exit 1
 fi
 trap "rm -f ${RESPONSE_FILE}" 0 2 3 5 10 13 15
 
 # Sanity check stuff
 if ! [[ "${ACCOUNT_SID}" =~ ^AC[0-9a-f]{32}$ ]]; then
-    echo "twilog: invalid account SID \`${ACCOUNT_SID}'" 1>&2
+    echo "${NAME}: invalid account SID \`${ACCOUNT_SID}'" 1>&2
     exit 1
 fi
 if ! [[ "${AUTH_TOKEN}" =~ ^[0-9a-f]{32}$ ]]; then
-    echo "twilog: invalid authentication token" 1>&2
+    echo "${NAME}: invalid authentication token" 1>&2
     exit 1
 fi
 
@@ -198,7 +199,7 @@ fi
 # Check result
 CURL_RESULT="$?"
 if [ "${CURL_RESULT}" -ne 0 ]; then
-    echo "twilog: error sending request (curl returned ${CURL_RESULT})" 1>&2
+    echo "${NAME}: error sending request (curl returned ${CURL_RESULT})" 1>&2
     exit 1
 fi
 
@@ -206,14 +207,14 @@ fi
 ERROR_CODE=`"${XMLSTARLET}" sel -T -t -m /TwilioResponse/RestException -v Code -n ${RESPONSE_FILE} 2>/dev/null`
 ERROR_MESSAGE=`"${XMLSTARLET}" sel -T -t -m /TwilioResponse/RestException -v Message -n ${RESPONSE_FILE} 2>/dev/null`
 if [ -n "${ERROR_CODE}" -o -n "${ERROR_MESSAGE}" ]; then
-    echo "twilog: Twilio REST error #${ERROR_CODE}: ${ERROR_MESSAGE}" 1>&2
+    echo "${NAME}: Twilio REST error #${ERROR_CODE}: ${ERROR_MESSAGE}" 1>&2
     exit 1
 fi
 
 # Extract SID of the most recent message (if any)
 NEW_LAST_SID=`"${XMLSTARLET}" sel -T -t -m '/TwilioResponse/Notifications/Notification[1]' -v Sid -n ${RESPONSE_FILE} 2>&1`
 if ! [[ "${NEW_LAST_SID}" =~ ^(NO[0-9a-f]{32})?$ ]]; then
-    echo "twilog: error parsing result: ${NEW_LAST_SID}" 1>&2
+    echo "${NAME}: error parsing result: ${NEW_LAST_SID}" 1>&2
     exit 1
 fi
 
@@ -287,7 +288,7 @@ fi
 # Update state file
 printf 'START_DATE='\''%s'\''\nLAST_SID='\''%s'\''\n' "${NEW_START_DATE}" "${NEW_LAST_SID}" > "${STATEFILE}"
 if [ $? -ne 0 ]; then
-    echo "twilog: error updating ${STATEFILE}" 1>&2
+    echo "${NAME}: error updating ${STATEFILE}" 1>&2
     exit 1
 fi
 

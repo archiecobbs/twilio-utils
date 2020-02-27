@@ -4,6 +4,7 @@
 set -e
 
 # Constants
+NAME="twiping"
 DEFAULT_CONFIG_FILE='@defaultconf@'
 BASE_URL='https://api.twilio.com/'
 ACCOUNTS_PATH='/2010-04-01/Accounts/${ACCOUNT_SID}/Messages'
@@ -27,7 +28,7 @@ DATE_PARSING_STYLE="@DATE_PARSING_STYLE@"
 # Usage message
 usage()
 {
-    echo "Usage: twiping [options] dest-number" 1>&2
+    echo "Usage: ${NAME} [options] dest-number" 1>&2
     echo "Options:" 1>&2
     echo "    -C curlflag       Pass curlflag to curl(1)" 1>&2
     echo "    -c file           Specify config file (default \"${DEFAULT_CONFIG_FILE}\")" 1>&2
@@ -155,7 +156,7 @@ esac
 # Ensure config file is readable; if not, then what we need must be provided on the command line
 if ! test -r "${CONFIG_FILE}"; then
     if test -z "${OVERRIDE_FROM_NUMBER}" -o -z "${OVERRIDE_ACCOUNT_SID}" -o -z "${OVERRIDE_AUTH_TOKEN}"; then
-        echo "twiping: can't read ${CONFIG_FILE}" 1>&2
+        echo "${NAME}: can't read ${CONFIG_FILE}" 1>&2
         exit 1
     fi
 else
@@ -183,19 +184,19 @@ TO_NUMBER=`normalize "${TO_NUMBER}"`
 
 # Sanity check stuff
 if ! [[ "${FROM_NUMBER}" =~ ^(\+1[2-9][0-9]{2}[2-9][0-9]{2}[0-9]{4}|[0-9]{5,6})$ ]]; then
-    echo "twiping: invalid source phone number \`${FROM_NUMBER}'" 1>&2
+    echo "${NAME}: invalid source phone number \`${FROM_NUMBER}'" 1>&2
     exit 1
 fi
 if ! [[ "${TO_NUMBER}" =~ ^(\+1[2-9][0-9]{2}[2-9][0-9]{2}[0-9]{4}|[0-9]{5,6})$ ]]; then
-    echo "twiping: invalid destination phone number \`${TO_NUMBER}'" 1>&2
+    echo "${NAME}: invalid destination phone number \`${TO_NUMBER}'" 1>&2
     exit 1
 fi
 if ! [[ "${ACCOUNT_SID}" =~ ^AC[0-9a-f]{32}$ ]]; then
-    echo "twiping: invalid account SID \`${ACCOUNT_SID}'" 1>&2
+    echo "${NAME}: invalid account SID \`${ACCOUNT_SID}'" 1>&2
     exit 1
 fi
 if ! [[ "${AUTH_TOKEN}" =~ ^[0-9a-f]{32}$ ]]; then
-    echo "twiping: invalid authentication token" 1>&2
+    echo "${NAME}: invalid authentication token" 1>&2
     exit 1
 fi
 
@@ -203,15 +204,15 @@ fi
 URL="`echo ${BASE_URL} | sed 's|/$||g'`""`eval echo ${ACCOUNTS_PATH}`"
 
 # Create temporary files for message response and error
-RESPONSE_FILE=`mktemp -q /tmp/twiping.XXXXXX`
+RESPONSE_FILE=`mktemp -q /tmp/${NAME}.XXXXXX`
 if [ $? -ne 0 ]; then
-    echo "twiping: can't create temporary file" 1>&2
+    echo "${NAME}: can't create temporary file" 1>&2
     exit 1
 fi
-ERROR_FILE=`mktemp -q /tmp/twiping.XXXXXX`
+ERROR_FILE=`mktemp -q /tmp/${NAME}.XXXXXX`
 if [ $? -ne 0 ]; then
     rm -f ${RESPONSE_FILE}
-    echo "twiping: can't create temporary file" 1>&2
+    echo "${NAME}: can't create temporary file" 1>&2
     exit 1
 fi
 trap "rm -f ${RESPONSE_FILE} ${ERROR_FILE}" 0 2 3 5 10 13 15
@@ -237,21 +238,21 @@ fi
 # Check result
 CURL_RESULT="$?"
 if [ "${CURL_RESULT}" -ne 0 ]; then
-    echo "twiping: error sending request (curl returned ${CURL_RESULT})" 1>&2
+    echo "${NAME}: error sending request (curl returned ${CURL_RESULT})" 1>&2
     exit 1
 fi
 
 # Apply XSLT to returned XML to get error message
 "${XSLTPROC}" "${RESULT_XSL}" "${RESPONSE_FILE}" > "${ERROR_FILE}" 2>&1
 if [ $? -ne 0 ]; then
-    echo -n "twiping: error parsing result:" 1>&2
+    echo -n "${NAME}: error parsing result:" 1>&2
     cat "${ERROR_FILE}" 1>&2
     exit 1
 fi
 
 # Was there an error returned?
 if [ -s "${ERROR_FILE}" ]; then
-    echo -n "twiping: " 1>&2
+    echo -n "${NAME}: " 1>&2
     cat "${ERROR_FILE}" 1>&2
     exit 1
 fi
@@ -267,7 +268,7 @@ while true; do
     CURRENT_TIME=`"${DATE}" -u +%s`
     ELAPSED_TIME=`"${EXPR}" "${CURRENT_TIME}" - "${START_TIME}" || true`
     if [ "${ELAPSED_TIME}" -ge "${MAX_WAIT_TIME}" ]; then
-        echo "twiping: no response after ${ELAPSED_TIME} seconds" 1>&2
+        echo "${NAME}: no response after ${ELAPSED_TIME} seconds" 1>&2
         exit 2
     fi
 
@@ -282,7 +283,7 @@ while true; do
     # Check result
     CURL_RESULT="$?"
     if [ "${CURL_RESULT}" -ne 0 ]; then
-        echo "twiping: error retrieving messages (curl returned ${CURL_RESULT})" 1>&2
+        echo "${NAME}: error retrieving messages (curl returned ${CURL_RESULT})" 1>&2
         exit 1
     fi
 
@@ -293,7 +294,7 @@ while true; do
     # Apply XSLT to returned XML to extract incoming messages
     "${XSLTPROC}" "${TWIPING_XSL}" "${RESPONSE_FILE}" > "${ERROR_FILE}" 2>&1
     if [ $? -ne 0 ]; then
-        echo -n "twiping: error parsing messages: " 1>&2
+        echo -n "${NAME}: error parsing messages: " 1>&2
         cat "${ERROR_FILE}" 1>&2
         exit 1
     fi
@@ -302,7 +303,7 @@ while true; do
     while IFS=/ read _SID _FROM _TO _DATE _BODY; do
         RESPONSE_TIME=`parse_date "${_DATE}" '%s'`
         if [ "${RESPONSE_TIME}" -ge "${START_TIME}" ]; then
-            echo "twiping: response from ${_FROM} after ${ELAPSED_TIME} seconds: ${_BODY}"
+            echo "${NAME}: response from ${_FROM} after ${ELAPSED_TIME} seconds: ${_BODY}"
             exit 0
         fi
     done < <("${GREP}" -E "${REPLY_PATTERN}" "${ERROR_FILE}")
