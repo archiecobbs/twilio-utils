@@ -269,7 +269,7 @@ while true; do
         fi
 
         # Output partial page if limit applies
-        if [ -n "${LIMIT}" -a "${COUNT}" -gt "${LIMIT}" ]; then
+        if [ -n "${LIMIT}" ]; then
             cat "${ERROR_FILE}" | head -n "${LIMIT}"
         else
             cat "${ERROR_FILE}"
