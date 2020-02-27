@@ -277,7 +277,7 @@ while true; do
     else
 
         # Output raw XML
-        cat "${ERROR_FILE}"
+        cat "${RESPONSE_FILE}"
     fi
 
     # Update limit
