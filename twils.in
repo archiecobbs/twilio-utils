@@ -103,7 +103,7 @@ while [ ${#} -gt 0 ]; do
             ;;
         -P)
             read -s -p 'Auth Token: ' OVERRIDE_AUTH_TOKEN
-            echo
+            echo 1>&2
             shift
             ;;
         --raw)
