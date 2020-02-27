@@ -132,7 +132,7 @@ esac
 
 # Ensure config file is readable; if not, then what we need must be provided on the command line
 if ! test -r "${CONFIG_FILE}"; then
-    if test -z "${OVERRIDE_FROM_NUMBER}" -o -z "${OVERRIDE_ACCOUNT_SID}" -o -z "${OVERRIDE_AUTH_TOKEN}"; then
+    if test -z "${OVERRIDE_ACCOUNT_SID}" -o -z "${OVERRIDE_AUTH_TOKEN}"; then
         echo "${NAME}: can't read ${CONFIG_FILE}" 1>&2
         exit 1
     fi
