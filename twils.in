@@ -102,8 +102,7 @@ while [ ${#} -gt 0 ]; do
             shift
             ;;
         -P)
-            read -s -p 'Auth Token: ' OVERRIDE_AUTH_TOKEN
-            echo 1>&2
+            OVERRIDE_AUTH_TOKEN="PROMPT"
             shift
             ;;
         --raw)
@@ -148,10 +147,18 @@ else
     . "${CONFIG_FILE}"
 fi
 
-# Override some config with command line flags
+# Override acccount ID from command line
 if [ -n "${OVERRIDE_ACCOUNT_SID}" ]; then
     ACCOUNT_SID="${OVERRIDE_ACCOUNT_SID}"
 fi
+
+# Input auth token
+if [ "${OVERRIDE_AUTH_TOKEN}" = 'PROMPT' ]; then
+    read -s -p "Enter auth token for ${ACCOUNT_SID}: " OVERRIDE_AUTH_TOKEN
+    echo 1>&2
+fi
+
+# Override some config with command line flags
 if [ -n "${OVERRIDE_AUTH_TOKEN}" ]; then
     AUTH_TOKEN="${OVERRIDE_AUTH_TOKEN}"
 fi
