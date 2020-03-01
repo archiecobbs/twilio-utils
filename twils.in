@@ -10,6 +10,7 @@ DEFAULT_CONFIG_FILE='@defaultconf@'
 BASE_URL='https://api.twilio.com/'
 MESSAGES_PATH='/2010-04-01/Accounts/${ACCOUNT_SID}/Messages'
 RESULT_XSL='@pkgdatadir@/result.xsl'
+RAW_RESULT_XSL='@pkgdatadir@/raw-result.xsl'
 CURL="@CURL@"
 ICONV="@ICONV@"
 XSLTPROC="@XSLTPROC@"
@@ -28,7 +29,7 @@ usage()
     echo "    --maxDate date    Specify maximum message date (in the form YYYY-MM-DD)" 1>&2
     echo "    --limit num       Specify the maximum number of results to return (default no limit)" 1>&2
     echo "    --pageSize size   Specify query page size (default ${DEFAULT_PAGE_SIZE})" 1>&2
-    echo "    --raw             Instead of SID's, output the raw <Messages> XML from each result page" 1>&2
+    echo "    --raw             Output the raw <Message> XML instead of just the message SID's" 1>&2
     echo "    -P                Ask for auth token from the terminal" 1>&2
     echo "    -p auth-token     Specify auth token (default read AUTH_TOKEN from config file)" 1>&2
     echo "    -u account-sid    Specify Account SID (default read ACCOUNT_SID from config file)" 1>&2
@@ -229,6 +230,7 @@ fi
 URL="${URL}?${PARAMS}"
 
 # Read pages of results
+FIRST_PAGE="true"
 while true; do
 
     # Read next page of results
@@ -291,7 +293,11 @@ while true; do
     else
 
         # Output raw XML
-        cat "${RESPONSE_FILE}"
+        if [ "${FIRST_PAGE}" = 'true' ]; then
+            echo '<?xml version="1.0" encoding="UTF-8"?>'
+            echo '<Messages>'
+        fi
+        "${XSLTPROC}" --stringparam limit "${LIMIT}" "${RAW_RESULT_XSL}" "${RESPONSE_FILE}" | grep -vE '^</?Messages>'
     fi
 
     # Update limit
@@ -317,7 +323,13 @@ while true; do
 
     # Update URL for next page
     URL="`echo ${BASE_URL} | sed 's|/$||g'`""`cat ${ERROR_FILE}`"
+    FIRST_PAGE="false"
 done
+
+# Finalize raw XML
+if [ "${RAW}" = 'true' ]; then
+    echo '</Messages>'
+fi
 
 # Done
 exit 0

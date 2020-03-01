@@ -9,13 +9,13 @@ dist_bin_SCRIPTS=	twimsg twils twirm twilog twiping
 
 man_MANS=		smslen.1 twimsg.1 twils.1 twirm.1 twilog.1 twiping.1
 
-pkgdata_DATA=		result.xsl twiping.xsl
+pkgdata_DATA=		result.xsl raw-result.xsl twiping.xsl
 
 docdir=			$(datadir)/doc/packages/$(PACKAGE)
 
 doc_DATA=		CHANGES COPYING README.md twilio.conf.sample
 
-EXTRA_DIST=		README.md CHANGES INSTALL twimsg.in twils.in twirm.in twilog.in twiping.in result.xsl twiping.xsl twilio.conf.sample
+EXTRA_DIST=		README.md CHANGES INSTALL twimsg.in twils.in twirm.in twilog.in twiping.in result.xsl raw-result.xsl twiping.xsl twilio.conf.sample
 
 smslen_SOURCES=		smslen.c
 
