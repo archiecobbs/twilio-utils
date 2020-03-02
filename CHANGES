@@ -1,9 +1,9 @@
-Version Next
+Version 1.2.0 Released March 2, 2020
 
+    - Added new twils(1) and twirm(1) utilities
     - Added "-S" and "-v" command line flags to twimsg(1)
-    - Added twils(1) and twirm(1) utilities
 
-Version 1.1.0 Release October 2, 2019
+Version 1.1.0 Released October 2, 2019
 
     - Added twiping(1) utility
     - Added "-u", "-p", and "-P" command line flags
