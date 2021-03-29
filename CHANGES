@@ -1,3 +1,7 @@
+Version Next
+
+    - Avoid "normalization" of numbers already in E.164 format
+
 Version 1.2.0 Released March 2, 2020
 
     - Added new twils(1) and twirm(1) utilities

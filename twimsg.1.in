@@ -49,7 +49,8 @@ if the
 flag is used.
 .Pp
 Phone numbers must be specified in E.164 format, i.e., with a leading plus sign and followed by the country code,
-or as a 5 or 6 digit short code.
+or else as a 5 or 6 digit short code.
+As a special case, valid North American (NANP) phone numbers may omit the leading +1 and contain extra characters.
 .Pp
 The input is automatically truncated at the point at which it would exceed
 .Ar limit
