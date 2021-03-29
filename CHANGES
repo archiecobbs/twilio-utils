@@ -1,6 +1,7 @@
 Version Next
 
     - Avoid "normalization" of numbers already in E.164 format
+    - Added specific SID mode to twils(1)
 
 Version 1.2.0 Released March 2, 2020
 

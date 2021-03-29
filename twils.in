@@ -18,8 +18,10 @@ XSLTPROC="@XSLTPROC@"
 # Usage message
 usage()
 {
-    echo "This command outputs the SID's of all matching SMS messages." 1>&2
-    echo "Usage: ${NAME} [options]" 1>&2
+    echo "This command outputs the SID's or raw XML for all matching SMS messages." 1>&2
+    echo "Usage:" 1>&2
+    echo "    ${NAME} [options]" 1>&2
+    echo "    ${NAME} [options] SID" 1>&2
     echo "Options:" 1>&2
     echo "    -C curlflag       Pass curlflag to curl(1)" 1>&2
     echo "    -c file           Specify config file (default \"${DEFAULT_CONFIG_FILE}\")" 1>&2
@@ -33,6 +35,7 @@ usage()
     echo "    -P                Ask for auth token from the terminal" 1>&2
     echo "    -p auth-token     Specify auth token (default read AUTH_TOKEN from config file)" 1>&2
     echo "    -u account-sid    Specify Account SID (default read ACCOUNT_SID from config file)" 1>&2
+    echo "Number, date, page, and limit options are only valid with the first form." 1>&2
 }
 
 # Function to normalize a phone number to the way Twilio likes it
@@ -135,14 +138,32 @@ while [ ${#} -gt 0 ]; do
             ;;
     esac
 done
+
+# Get specific message SID, if any
+MESSAGE_SID=""
 case "${#}" in
     0)
+        ;;
+    *)
+        MESSAGE_SID="${1}"
         ;;
     *)
         usage
         exit 1
         ;;
 esac
+
+# Sanity check specific message SID
+if [ -n "${MESSAGE_SID}" ]; then
+    if ! [[ "${MESSAGE_SID}" =~ ^SM[[:xdigit:]]{32}$ ]]; then
+        echo "${NAME}: invalid message SID \"${MESSAGE_SID}\"" 1>&2
+        exit 1
+    fi
+    if [ -n "${FROM_NUMBER}" -o -n "${TO_NUMBER}" -o -n "${MIN_DATE}" -o -n "${MAX_DATE}" -o -n "${LIMIT}" ]; then
+        usage
+        exit 1
+    fi
+fi
 
 # Ensure config file is readable; if not, then what we need must be provided on the command line
 if ! test -r "${CONFIG_FILE}"; then
@@ -221,20 +242,24 @@ trap "rm -f ${RESPONSE_FILE} ${ERROR_FILE}" 0 2 3 5 10 13 15
 
 # Build initial URL
 URL="`echo ${BASE_URL} | sed 's|/$||g'`""`eval echo ${MESSAGES_PATH}`"
-PARAMS="PageSize=${PAGE_SIZE}"
-if [ -n "${FROM_NUMBER}" ]; then
-    PARAMS="${PARAMS}&From=${FROM_NUMBER}"
+if [ -z "${MESSAGE_SID}" ]; then
+    PARAMS="PageSize=${PAGE_SIZE}"
+    if [ -n "${FROM_NUMBER}" ]; then
+        PARAMS="${PARAMS}&From=${FROM_NUMBER}"
+    fi
+    if [ -n "${TO_NUMBER}" ]; then
+        PARAMS="${PARAMS}&From=${TO_NUMBER}"
+    fi
+    if [ -n "${MIN_DATE}" ]; then
+        PARAMS="${PARAMS}&DateSent%3E=${MIN_DATE}"
+    fi
+    if [ -n "${MAX_DATE}" ]; then
+        PARAMS="${PARAMS}&DateSent%3C=${MAX_DATE}"
+    fi
+    URL="${URL}?${PARAMS}"
+else
+    URL="${URL}/${MESSAGE_SID}"
 fi
-if [ -n "${TO_NUMBER}" ]; then
-    PARAMS="${PARAMS}&From=${TO_NUMBER}"
-fi
-if [ -n "${MIN_DATE}" ]; then
-    PARAMS="${PARAMS}&DateSent%3E=${MIN_DATE}"
-fi
-if [ -n "${MAX_DATE}" ]; then
-    PARAMS="${PARAMS}&DateSent%3C=${MAX_DATE}"
-fi
-URL="${URL}?${PARAMS}"
 
 # Read pages of results
 FIRST_PAGE="true"
@@ -315,6 +340,11 @@ while true; do
         fi
     fi
 
+    # If getting specific message by SID, bail out here
+    if [ -n "${MESSAGE_SID}" ]; then
+        break
+    fi
+
     # Get next page URI
     "${XSLTPROC}" --stringparam lsop next "${RESULT_XSL}" "${RESPONSE_FILE}" > "${ERROR_FILE}" 2>&1
     if [ $? -ne 0 ]; then
@@ -340,4 +370,3 @@ fi
 
 # Done
 exit 0
-

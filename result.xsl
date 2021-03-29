@@ -12,7 +12,14 @@
                 <xsl:apply-templates select="TwilioResponse/RestException"/>
             </xsl:when>
             <xsl:when test="TwilioResponse/Message">
-                <xsl:value-of select="concat(TwilioResponse/Message/Sid, '&#10;')"/>
+                <xsl:choose>
+                    <xsl:when test="$lsop = 'count'">
+                        <xsl:value-of select="'1&#10;'"/>
+                    </xsl:when>
+                    <xsl:when test="$lsop = 'sids'">
+                        <xsl:apply-templates select="TwilioResponse/Message" mode="sid"/>
+                    </xsl:when>
+                </xsl:choose>
             </xsl:when>
             <xsl:when test="TwilioResponse/Messages">
                 <xsl:choose>

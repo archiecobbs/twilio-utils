@@ -24,6 +24,9 @@
 .Nm twils
 .Bk -words
 .Op Fl c Ar config-file
+.Op Fl u Ar account-sid
+.Op Fl p Ar auth-token
+.Op Fl P
 .Op Fl C Ar curl-flag
 .Op Fl \-from Ar number
 .Op Fl \-to Ar number
@@ -32,9 +35,15 @@
 .Op Fl \-limit Ar num
 .Op Fl \-pageSize Ar size
 .Op Fl \-raw
+.Nm twils
+.Bk -words
+.Op Fl c Ar config-file
 .Op Fl u Ar account-sid
 .Op Fl p Ar auth-token
 .Op Fl P
+.Op Fl C Ar curl-flag
+.Op Fl \-raw
+.Ar SID
 .Ek
 .Sh DESCRIPTION
 .Nm
@@ -43,6 +52,8 @@ retrieves
 resources from the Twilio REST API and prints their message SID's to standard output.
 .Pp
 Messages are returned in reverse chronological order.
+.Pp
+In the second form, the SID of one specific message is given.
 .Sh OPTIONS
 .Bl -tag -width Ds
 .It Fl c

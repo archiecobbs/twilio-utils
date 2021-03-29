@@ -9,6 +9,9 @@
     <xsl:template match="/">
         <Messages>
             <xsl:choose>
+                <xsl:when test="TwilioResponse/Message">
+                    <xsl:apply-templates select="TwilioResponse/Message"/>
+                </xsl:when>
                 <xsl:when test="$limit != ''">
                     <xsl:apply-templates select="TwilioResponse/Messages/Message[position() &lt;= $limit]"/>
                 </xsl:when>
