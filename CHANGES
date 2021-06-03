@@ -1,4 +1,4 @@
-Version Next
+Version 1.2.1 Released June 3, 2021
 
     - Avoid "normalization" of numbers already in E.164 format
     - Added specific SID mode to twils(1)

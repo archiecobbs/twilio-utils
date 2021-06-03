@@ -16,7 +16,7 @@
 # under the License.
 #
 
-AC_INIT([twilio-utils - Command line utilities for Twilio users], [1.2.0], [https://github.com/archiecobbs/twilio-utils], [twilio-utils])
+AC_INIT([twilio-utils - Command line utilities for Twilio users], [1.2.1], [https://github.com/archiecobbs/twilio-utils], [twilio-utils])
 AC_CONFIG_AUX_DIR(scripts)
 AM_INIT_AUTOMAKE
 dnl AM_MAINTAINER_MODE
