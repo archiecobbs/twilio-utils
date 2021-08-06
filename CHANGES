@@ -1,3 +1,7 @@
+Version Next
+
+    - Fixed bug in twils(1) where "--to" was acting like "--from"
+
 Version 1.2.1 Released June 3, 2021
 
     - Avoid "normalization" of numbers already in E.164 format

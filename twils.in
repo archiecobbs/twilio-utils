@@ -248,7 +248,7 @@ if [ -z "${MESSAGE_SID}" ]; then
         PARAMS="${PARAMS}&From=${FROM_NUMBER}"
     fi
     if [ -n "${TO_NUMBER}" ]; then
-        PARAMS="${PARAMS}&From=${TO_NUMBER}"
+        PARAMS="${PARAMS}&To=${TO_NUMBER}"
     fi
     if [ -n "${MIN_DATE}" ]; then
         PARAMS="${PARAMS}&DateSent%3E=${MIN_DATE}"
