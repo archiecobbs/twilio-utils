@@ -1,6 +1,7 @@
 Version Next
 
     - Fixed bug in twils(1) where "--to" was acting like "--from"
+    - Fixed bug with twimsg '-S' flag
 
 Version 1.2.1 Released June 3, 2021
 

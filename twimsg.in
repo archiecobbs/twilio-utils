@@ -245,7 +245,7 @@ if [ "${VERBOSE}" = 'true' ]; then
 fi
 
 # Apply XSLT to returned XML to get error message
-"${XSLTPROC}" "${RESULT_XSL}" "${RESPONSE_FILE}" > "${OUTPUT_FILE}" 2>&1
+"${XSLTPROC}" --stringparam lsop sids "${RESULT_XSL}" "${RESPONSE_FILE}" > "${OUTPUT_FILE}" 2>&1
 if [ $? -ne 0 ]; then
     echo -n "${NAME}: error parsing result:" 1>&2
     cat "${OUTPUT_FILE}" 1>&2
