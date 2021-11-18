@@ -226,6 +226,11 @@ if ! [[ "${AUTH_TOKEN}" =~ ^[0-9a-f]{32}$ ]]; then
     exit 1
 fi
 
+# There's no point in having the page size be larger than the limit
+if [ -n "${LIMIT}" -a "${PAGE_SIZE}" -gt "${LIMIT}" ]; then
+    PAGE_SIZE="${LIMIT}"
+fi
+
 # Create temporary files for message response and error
 RESPONSE_FILE=`mktemp -q /tmp/${NAME}.XXXXXX`
 if [ $? -ne 0 ]; then
