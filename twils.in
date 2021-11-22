@@ -348,7 +348,7 @@ while true; do
             echo '<?xml version="1.0" encoding="UTF-8"?>'
             echo '<Messages>'
         fi
-        "${XSLTPROC}" --stringparam limit "${LIMIT}" "${RAW_RESULT_XSL}" "${RESPONSE_FILE}" | grep -vE '^</?Messages>'
+        "${XSLTPROC}" --stringparam limit "${LIMIT}" "${RAW_RESULT_XSL}" "${RESPONSE_FILE}" | grep -vE '^</?Messages/?>' || true
     fi
 
     # Update limit
