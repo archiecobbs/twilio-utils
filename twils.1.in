@@ -81,10 +81,14 @@ Restrict to messages sent from the specified phone number (must be in E.164 form
 Restrict to messages sent to the specified phone number (must be in E.164 format) or 5 or 6 digit short code.
 .It Fl \-minDate
 Restrict to messages sent on or after the specified date, which must be in the form
-.Pa YYYY-MM-DD .
+.Pa YYYY-MM-DD
+or
+.Pa YYYY-MM-DDTHH:MM:SSZ .
 .It Fl \-maxDate
 Restrict to messages sent on or before the specified date, which must be in the form
-.Pa YYYY-MM-DD .
+.Pa YYYY-MM-DD
+or
+.Pa YYYY-MM-DDTHH:MM:SSZ .
 .It Fl \-limit
 Return at most
 .Ar num

@@ -197,11 +197,11 @@ FROM_NUMBER=`normalize "${FROM_NUMBER}"`
 TO_NUMBER=`normalize "${TO_NUMBER}"`
 
 # Sanity check stuff
-if [ -n "${MIN_DATE}" ] && ! [[ "${MIN_DATE}" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+if [ -n "${MIN_DATE}" ] && ! [[ "${MIN_DATE}" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}(T[0-9]{2}:[0-9]{2}:[0-9]{2}Z)?$ ]]; then
     echo "${NAME}: invalid minimum date \"${MIN_DATE}\"" 1>&2
     exit 1
 fi
-if [ -n "${MAX_DATE}" ] && ! [[ "${MAX_DATE}" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+if [ -n "${MAX_DATE}" ] && ! [[ "${MAX_DATE}" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}(T[0-9]{2}:[0-9]{2}:[0-9]{2}Z)?$ ]]; then
     echo "${NAME}: invalid maximum date \"${MAX_DATE}\"" 1>&2
     exit 1
 fi
