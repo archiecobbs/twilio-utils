@@ -219,7 +219,17 @@ fi
 trap "rm -f ${RESPONSE_FILE} ${OUTPUT_FILE}" 0 2 3 5 10 13 15
 
 # Truncate input and post to Twilio
-[ "${VERBOSE}" != 'true' ] || echo "${NAME}: posting data to ${URL}" 1>&2
+if [ "${VERBOSE}" = 'true' ]; then
+    echo "${NAME}: posting data to ${URL}" 1>&2
+    echo "${CURL}" --silent \
+      --user "${ACCOUNT_SID}:${AUTH_TOKEN}" \
+      --data "From=${FROM_NUMBER}" \
+      --data "To=${TO_NUMBER}" \
+      --data-urlencode "Body@-" \
+      --output "${RESPONSE_FILE}" \
+      ${CURL_FLAGS} \
+      "${URL}"
+fi
 cat "${INPUT_FILE}" \
   | "${ICONV}" -c -s -f "${ENCODING}" -t "${TWILIO_ENCODING}" \
   | "${SMSLEN}" -i "${TWILIO_ENCODING}" -t "${TRUNCATE_LIMIT}" \
