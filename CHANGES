@@ -1,3 +1,7 @@
+Version Next
+
+    - Added twimsg(1) "-M" flag.
+
 Version 1.2.2 Released April 11, 2023
 
     - Fixed bug in twils(1) where "--to" was acting like "--from"
