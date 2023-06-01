@@ -258,7 +258,7 @@ fi
 
 # Get SMS ID or error response from output file
 SMS_ID=`cat "${OUTPUT_FILE}"`
-if ! [[ "${SMS_ID}" =~ ^SM[0-9a-f]{32}$ ]]; then
+if ! [[ "${SMS_ID}" =~ ^[MS]M[0-9a-f]{32}$ ]]; then
     echo -n "${NAME}: " 1>&2
     cat "${OUTPUT_FILE}" 1>&2
     exit 1

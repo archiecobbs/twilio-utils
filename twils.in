@@ -161,7 +161,7 @@ esac
 
 # Sanity check specific message SID
 if [ -n "${MESSAGE_SID}" ]; then
-    if ! [[ "${MESSAGE_SID}" =~ ^SM[[:xdigit:]]{32}$ ]]; then
+    if ! [[ "${MESSAGE_SID}" =~ ^[SM]M[[:xdigit:]]{32}$ ]]; then
         echo "${NAME}: invalid message SID \"${MESSAGE_SID}\"" 1>&2
         exit 1
     fi

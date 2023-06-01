@@ -98,7 +98,7 @@ if [ -n "${OVERRIDE_AUTH_TOKEN}" ]; then
 fi
 
 # Sanity check stuff
-if ! [[ "${MESSAGE_SID}" =~ ^SM[0-9a-f]{32}$ ]]; then
+if ! [[ "${MESSAGE_SID}" =~ ^[SM]M[0-9a-f]{32}$ ]]; then
     echo "${NAME}: invalid message SID \"${MESSAGE_SID}\"" 1>&2
     exit 1
 fi
