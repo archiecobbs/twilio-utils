@@ -233,7 +233,7 @@ if ! [[ "${AUTH_TOKEN}" =~ ^[0-9a-f]{32}$ ]]; then
 fi
 
 # There's no point in having the page size be larger than the limit
-if [ -n "${LIMIT}" -a "${PAGE_SIZE}" -gt "${LIMIT}" ]; then
+if [ -n "${LIMIT}" ] && [ "${PAGE_SIZE}" -gt "${LIMIT}" ]; then
     PAGE_SIZE="${LIMIT}"
 fi
 
